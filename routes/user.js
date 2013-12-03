@@ -18,8 +18,9 @@ exports.list = function(req, res){
 exports.quickCreate = function(req, res){
 	var option = req.query;
 	if(!option.email){
-		res.render('404', {url: req.url});
-		return;
+		//res.render('404', {url: req.url});
+		//return;
+		return res.send('1');
 	}
 	// var option = {
 	// 	desc: 	'test',
