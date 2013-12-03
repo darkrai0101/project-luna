@@ -16,17 +16,17 @@ exports.list = function(req, res){
 };
 
 exports.quickCreate = function(req, res){
-	//var option = req.query;
-	var option = {
-		desc: 	'test',
-    	hour: 	'2',
-    	minute: '40',
-    	period: 'pm',
-    	date: 	'03',
-    	month: 	'12',
-    	repeat: '1',
-    	email: 	'trungpheng@gmail.com'
-	};
+	var option = req.query;
+	// var option = {
+	// 	desc: 	'test',
+ //    	hour: 	'2',
+ //    	minute: '40',
+ //    	period: 'pm',
+ //    	date: 	'03',
+ //    	month: 	'12',
+ //    	repeat: '1',
+ //    	email: 	'trungpheng@gmail.com'
+	// };
 
 	var email = option.email;
 	if(option.period === 'pm') hour = parseInt(option.hour) + 12; else hour = option.hour;
