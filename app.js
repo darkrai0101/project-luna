@@ -155,8 +155,9 @@ app.all('/user', function(req, res, next){
   return res.send('test');
 });
 app.all('/user/quick-create', function(req, res, next){
-  var option = req.query;
-  console.log(option);
+  var option = req.body;
+  //console.log(req);
+  //console.log(option);
   if(!option.email){
     res.render('404', {url: req.url});
     return;
