@@ -17,6 +17,10 @@ exports.list = function(req, res){
 
 exports.quickCreate = function(req, res){
 	var option = req.query;
+	if(!option.email){
+		res.render('404', {url: req.url});
+		return;
+	}
 	// var option = {
 	// 	desc: 	'test',
  //    	hour: 	'2',
@@ -27,6 +31,7 @@ exports.quickCreate = function(req, res){
  //    	repeat: '1',
  //    	email: 	'trungpheng@gmail.com'
 	// };
+
 
 	var email = option.email;
 	if(option.period === 'pm') hour = parseInt(option.hour) + 12; else hour = option.hour;
