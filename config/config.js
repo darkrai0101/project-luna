@@ -8,10 +8,11 @@ exports.mysql = {
 	host : 'localhost',
 	port : '3306',
 	user : 'root',
+	password : 'mininoic',
 	database : 'luna'
 }
 
 exports.constant = {
-	url : 'http://localhost:3000',
-	domain : 'localhost:3000',
+	url : 'http://amduonglich.mininoic.com',
+	domain : 'amduonglich.mininoic.com',
 }
