@@ -33,7 +33,7 @@ var silent = 'test' == process.env.NODE_ENV;
 
 // all environments
 app.set('port', process.env.PORT || 3000);
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(__dirname, '../luna/dist'));
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 app.use(express.favicon());
@@ -45,7 +45,7 @@ app.use(express.json());
 app.use(express.urlencoded());
 app.use(express.methodOverride());
 app.use(app.router);
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '../luna/dist')));
 
 // development only
 if ('development' == app.get('env')) {
