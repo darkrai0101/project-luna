@@ -208,6 +208,18 @@ app.all('/user/quick-create', function(req, res, next){
   };
   
   console.log(solarDate);
+  var arr_calendar = {
+        solarDate : solarDate, 
+        userID    : '',
+        message   : option.decs,
+        hour      : hour,
+        minute    : option.minute,
+        date      : option.date,
+        month     : option.month,
+        beforeHour: 0,
+        repeatType: option.repeat,
+        active    : 0
+    };
 
   db.query('select id from users where email = ? limit 1', email, function(err, rows, fields){
     if(err) throw err;
@@ -221,6 +233,7 @@ app.all('/user/quick-create', function(req, res, next){
       console.log(1);
       userID = row.id;
 
+      arr_calendar.userID = userID;
     }else{
       var arr = {
         name   : email,
@@ -231,21 +244,11 @@ app.all('/user/quick-create', function(req, res, next){
       db.query('insert into users set ?', arr, function(err, rows, fields){
         if(err) throw err;
         userID = rows.insertId;
+
+        arr_calendar.userID = userID;
       });
     };
 
-    var arr = {
-      solarDate : solarDate, 
-      userID    : userID,
-      message   : option.decs,
-        hour      : hour,
-        minute    : option.minute,
-        date      : option.date,
-        month     : option.month,
-        beforeHour: 0,
-        repeatType: option.repeat,
-        active    : 0
-    };
     db.query('insert into calendar set ?', arr, function(err, rows, fields){
       if(err) throw err;
 
