@@ -1,7 +1,7 @@
 
 exports.mail = {
-	email : 'nv.trung91@gmail.com',
-	password : 'trungyen176',
+	email : 'amduonglich@gmail.com',
+	password : 'lgwznzzgoeuradto',
 }
 
 exports.mysql = {

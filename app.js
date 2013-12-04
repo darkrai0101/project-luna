@@ -142,7 +142,7 @@ setInterval(function(){
       }
     }
   });
-}, 6000);
+}, 600000);
 
 
  // ROUTES
@@ -186,7 +186,7 @@ app.all('/user/quick-create', function(req, res, next){
     if(now.getHours() > hour){
       schedule_date += 1;
     }
-    solarDate = func.toStringDate(now.getFullYear(), now.getMonth(), schedule_date, hour, option.minute);
+    solarDate = func.toStringDate(now.getFullYear(), now.getMonth()+1, schedule_date, hour, option.minute);
 
   }else if(option.repeat == 1){
     //repeat theo thang
@@ -211,7 +211,7 @@ app.all('/user/quick-create', function(req, res, next){
   var arr_calendar = {
         solarDate : solarDate, 
         userID    : '',
-        message   : option.decs,
+        message   : option.desc,
         hour      : hour,
         minute    : option.minute,
         date      : option.date,
