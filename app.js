@@ -89,57 +89,61 @@ setInterval(function(){
   var now_string = moment(now).format('YYYY-MM-DD');
   var now_hour = now.hours();
   var now_minute = now.minutes();
-
+  console.log(now_string);
   db.query('select * from calendar where active = 1', function(err, rows, fields){
     if(err) throw err;
-    for(var p in rows){
-      var row = rows[p];
-      
-      var date = moment(row.solarDate);
-      var date_string = date.format('YYYY-MM-DD');
-      console.log(date_string +' -- '+now_string);
-      if(date_string === now_string){
-        var hour = date.hours();
-        if(now_hour === hour){
-          var minute = date.minutes();
-          if(now_minute < minute + 5 && now_minute > minute - 5){
-            console.log('alarm alarm');
+    if(rows[0]){
 
-            var repeatType = row.repeatType;
-            var solarDate = new Date();
-            
-            if(repeatType == 0){
-              // update lai ngay: ngay + 1
-              var day = solarDate.getDate() + 1;
-              solarDate.setDate(day);
+      for(var p in rows){
+        var row = rows[p];
+        var date = moment(row.solarDate);
+        var date_string = date.format('YYYY-MM-DD');
+        
+        if(date_string === now_string){
+          var hour = date.hours();
+          if(now_hour === hour){
+            var minute = date.minutes();
+            if(now_minute < minute + 5 && now_minute > minute - 5){
+              console.log(now_hour+':'+now.minute+' alarm alarm');
 
+              var repeatType = row.repeatType;
+              var solarDate = new Date();
+              
+              if(repeatType == 0){
+                // update lai ngay: ngay + 1
+                var day = solarDate.getDate() + 1;
+                solarDate.setDate(day);
+
+                console.log(solarDate);
+              }else if(repeatType == 1){
+                // update lai ngay moi cua thang sau
+                var nextDate = amduonglich.getNextSolarDateOfLunarDate(parseInt(row.date));
+                console.log(nextDate);
+                solarDate.setDate(nextDate[0]);
+                solarDate.setMonth(nextDate[1]-1);
+                solarDate.setFullYear(nextDate[2]);
+
+              }else{
+                // update lai ngay thang moi nam sau
+                var nextDateMonth = amduonglich.getNextSolarDateOfLunarDateAndMonth(parseInt(row.date), parseInt(row.month));
+                solarDate.setDate(nextDate[0]);
+                solarDate.setMonth(nextDate[1]-1);
+                solarDate.setFullYear(nextDate[2]);
+              }
               console.log(solarDate);
-            }else if(repeatType == 1){
-              // update lai ngay moi cua thang sau
-              var nextDate = amduonglich.getNextSolarDateOfLunarDate(parseInt(row.date));
-              console.log(nextDate);
-              solarDate.setDate(nextDate[0]);
-              solarDate.setMonth(nextDate[1]-1);
-              solarDate.setFullYear(nextDate[2]);
+              var solarDateString = func.toStringDate(solarDate.getFullYear(), solarDate.getMonth()+1, solarDate.getDate(), row.hour, row.minute);
+              console.log('string - '+solarDateString);
+              db.query('update calendar set solarDate = "'+solarDateString+'" where id = ?',row.id);
 
-            }else{
-              // update lai ngay thang moi nam sau
-              var nextDateMonth = amduonglich.getNextSolarDateOfLunarDateAndMonth(parseInt(row.date), parseInt(row.month));
-              solarDate.setDate(nextDate[0]);
-              solarDate.setMonth(nextDate[1]-1);
-              solarDate.setFullYear(nextDate[2]);
+              db.query('select email from users where id = ? limit 1', row.userID, function(err, rows, fields){
+                  mailer.noti(rows[0]['email'], row.message);
+              });
             }
-            console.log(solarDate);
-            var solarDateString = func.toStringDate(solarDate.getFullYear(), solarDate.getMonth()+1, solarDate.getDate(), row.hour, row.minute);
-            console.log('string - '+solarDateString);
-            db.query('update calendar set solarDate = "'+solarDateString+'" where id = ?',row.id);
-
-            db.query('select email from users where id = ? limit 1', row.userID, function(err, rows, fields){
-                mailer.noti(rows[0]['email'], row.message);
-            });
           }
         }
       }
+    }else{
+      console.log('Khong co nhac nho nao...');
     }
   });
 }, 400000);
