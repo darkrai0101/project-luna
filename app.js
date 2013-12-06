@@ -56,24 +56,24 @@ if ('development' == app.get('env')) {
 app.enable('verbose errors');
 // disable in production
 if('production' == app.settings.env){
-	app.disable('verbose errors');
+  app.disable('verbose errors');
 }
 
 silent || app.use(express.logger('dev'));
 
 app.use(function(req, res, next){
-	res.status(404);
+  res.status(404);
 
-	if(req.accepts('html')){
-		res.render('404', {url: req.url});
-		return;
-	}
+  if(req.accepts('html')){
+    res.render('404', {url: req.url});
+    return;
+  }
 });
 
 app.use(function(err, req, res, next){
 
-	res.status(err.status || 500);
-	res.render('500', {error: err});
+  res.status(err.status || 500);
+  res.render('500', {error: err});
 
 });
 
@@ -148,7 +148,7 @@ setInterval(function(){
  // ROUTES
 
 app.get('/', routes.index);
-// app.get('/user', user.list);
+// app.all('/user', user.list);
 // app.get('/user/quick-create', user.quickCreate);
 // app.get('/user/auth-token/:token', user.authToken);
 app.all('/user', function(req, res, next){
@@ -156,22 +156,10 @@ app.all('/user', function(req, res, next){
 });
 app.all('/user/quick-create', function(req, res, next){
   var option = req.body;
-  //console.log(req);
-  //console.log(option);
   if(!option.email){
     res.render('404', {url: req.url});
     return;
   }
-  // var option = {
-  //  desc:   'test',
- //     hour:   '2',
- //     minute: '40',
- //     period: 'pm',
- //     date:   '03',
- //     month:  '12',
- //     repeat: '1',
- //     email:  'trungpheng@gmail.com'
-  // };
 
   var email = option.email;
   if(option.period === 'pm') hour = parseInt(option.hour) + 12; else hour = option.hour;
@@ -200,6 +188,8 @@ app.all('/user/quick-create', function(req, res, next){
   }else{
     //repeat theo nam
     var schedule = amduonglich.getNextSolarDateOfLunarDateAndMonth(parseInt(option.date), parseInt(option.month));
+    console.log(schedule);
+
     var schedule_date = schedule[0];
     var schedule_month = schedule[1];
     var schedule_year = schedule[2];
@@ -208,9 +198,10 @@ app.all('/user/quick-create', function(req, res, next){
   };
   
   console.log(solarDate);
+
   var arr_calendar = {
-        solarDate : solarDate, 
         userID    : '',
+        solarDate : solarDate, 
         message   : option.desc,
         hour      : hour,
         minute    : option.minute,
@@ -228,12 +219,31 @@ app.all('/user/quick-create', function(req, res, next){
     var expire = func.createExpire();
     var userID;
 
+    
     if(rows[0]){
       var row = rows[0];
       console.log(1);
       userID = row.id;
 
       arr_calendar.userID = userID;
+
+      db.query('insert into calendar set ?', arr_calendar, function(err, rows, fields){
+          if(err) throw err;
+
+          var calendarID = rows.insertId;
+          var arr = {
+              userID     : userID,
+              calendarID : calendarID,
+              token      : token,
+              expire     : expire
+          };
+          db.query('insert into token set ?', arr, function(err, rows, fields){
+            if(err) throw err;
+            mailer.auth(email, token);
+            return res.send('1');
+          });
+        });
+
     }else{
       var arr = {
         name   : email,
@@ -246,25 +256,25 @@ app.all('/user/quick-create', function(req, res, next){
         userID = rows.insertId;
 
         arr_calendar.userID = userID;
+
+        db.query('insert into calendar set ?', arr_calendar, function(err, rows, fields){
+          if(err) throw err;
+
+          var calendarID = rows.insertId;
+          var arr = {
+              userID     : userID,
+              calendarID : calendarID,
+              token      : token,
+              expire     : expire
+          };
+          db.query('insert into token set ?', arr, function(err, rows, fields){
+            if(err) throw err;
+            mailer.auth(email, token);
+            return res.send('1');
+          });
+        });
       });
     };
-
-    db.query('insert into calendar set ?', arr, function(err, rows, fields){
-      if(err) throw err;
-
-      var calendarID = rows.insertId;
-      var arr = {
-          userID     : userID,
-          calendarID : calendarID,
-          token      : token,
-          expire     : expire
-      };
-      db.query('insert into token set ?', arr, function(err, rows, fields){
-        if(err) throw err;
-        mailer.auth(email, token);
-        return res.send('1');
-      });
-    });
   });
 });
 app.all('/user/auth-token/:token', function(req, res, next){
@@ -294,14 +304,16 @@ app.all('/user/auth-token/:token', function(req, res, next){
           if(rows[0]){
             mailer.thankReg(rows[0]['email']);
 
-            return res.send('xac thuc thanh cong');
+            //return res.send('xac thuc thanh cong');
+            return res.redirect('/#/confirmation/created')
           }
         });
       }else{
         db.query('delete from calendar  where id = ?',calendarID);
         db.query('delete from token  where token = ?',token);
 
-        res.send('ma xac thuc het han');
+        //res.send('ma xac thuc het han');
+        return res.redirect('/#/confirmation/auth-fail-create');
       }
     }else{
       res.render('404', {url: req.url});
@@ -310,6 +322,94 @@ app.all('/user/auth-token/:token', function(req, res, next){
   });
 });
 
+app.all('/user/delete-event/:email', function(req, res, next){
+  var email = req.params.email;
+  if(!email){
+    res.render('404', {url: req.url});
+    return;
+  }
+
+  db.query('select * from users left join calendar on users.id = calendar.userID where users.email = ? and calendar.active = 1',email, function(err, rows, fields){
+    if(err) throw err;
+    if(rows[0]){
+
+      var option = [];
+      var time = '';
+      var expire = func.createExpire();
+
+      for(var p in rows){
+        var row = rows[p];
+
+        switch(row.repeatType){
+          case 0:
+            time = 'Vào '+row.hour+' giờ '+row.minute+' phút hàng ngày';
+          case 1:
+            time = 'Vào '+row.hour+' giờ '+row.minute+' ngày '+row.date+' hàng tháng';
+          case 2:
+            time = 'Vào '+row.hour+' giờ '+row.minute+' ngày '+row.date+' tháng '+row.month+' hàng tháng';
+        };
+
+        var message = row.message;
+        var token = func.createToken();
+        var link = config.constant.url+'/user/auth/delete-event/'+token;
+        option.push({
+            time : time,
+            message: message,
+            link : link
+        });
+
+        var arr = {
+          userID : row.userID,
+          calendarID: row.id,
+          token : token,
+          expire: expire
+        };
+
+        db.query('insert into token set ?', arr);
+      }
+      mailer.deleteEvent(email, option);
+      return res.send('1');
+    }else{
+      return res.send('0');
+    }
+  });
+});
+
+app.all('/user/auth/delete-event/:token', function(req, res, next){
+  var token = req.params.token;
+  if(!token){
+    res.render('404', {url: req.url});
+    return;
+  }
+  token = encodeURIComponent(token);
+
+  db.query('select * from token where token = ? limit 1', token, function(err, rows, fields){
+      if(err) throw err;
+      if(rows[0]){
+        row = rows[0];
+        var expire = row['expire'];
+        var calendarID = row['calendarID'];
+        var now = new Date().getTime();
+
+        if(now < expire){
+          db.query('delete from calendar where id = ?', calendarID);
+          db.query('delete from token where token = ?', token);
+
+          //return res.send('xac thuc thanh cong');
+          return res.redirect('/#/confirmation/deleted');
+        }else{
+          db.query('delete from token  where token = ?',token);
+
+          //return res.send('ma xac thuc het han');
+          return res.redirect('/#/confirmation/auth-fail-delete');
+        }
+      }else{
+        res.render('404', {url: req.url});
+        return;
+        //return res.redirect('/#/')
+      }
+  });
+});
 
 app.get('/404', function(req, res, next){
   // trigger a 404 since no other middleware
