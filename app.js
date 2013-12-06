@@ -320,8 +320,9 @@ app.all('/user/auth-token/:token', function(req, res, next){
         return res.redirect('/#/confirmation/auth-fail-create');
       }
     }else{
-      res.render('404', {url: req.url});
-      return;
+      //res.render('404', {url: req.url});
+      //return;
+      return res.redirect('/#/confirmation/auth-fail-create');
     }
   });
 });
@@ -408,9 +409,10 @@ app.all('/user/auth/delete-event/:token', function(req, res, next){
           return res.redirect('/#/confirmation/auth-fail-delete');
         }
       }else{
-        res.render('404', {url: req.url});
-        return;
-        //return res.redirect('/#/')
+
+        //res.render('404', {url: req.url});
+        //return;
+        return res.redirect('/#/confirmation/auth-fail-delete');
       }
   });
 });
