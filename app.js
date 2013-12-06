@@ -142,7 +142,7 @@ setInterval(function(){
       }
     }
   });
-}, 600000);
+}, 400000);
 
 
  // ROUTES
