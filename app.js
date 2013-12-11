@@ -10,6 +10,48 @@ var express = require('express');
 var http = require('http');
 var path = require('path');
 var moment = require('moment');
+var util = require('util');
+
+
+/**
+ * LOGIN OPENID
+ */
+
+var passport = require('passport');
+var GoogleStrategy = require('passport-google').Strategy;
+var FacebookStrategy = require('passport-facebook').Strategy;
+
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(obj, done) {
+  done(null, obj);
+});
+
+passport.use(new GoogleStrategy({
+    returnURL: config.constant.url+'/auth/google/return',
+    realm: config.constant.url
+  },
+  function(identifier, profile, done) {
+    process.nextTick(function () {
+      profile.identifier = identifier;
+      return done(null, profile);
+    });
+  }
+));
+
+passport.use(new FacebookStrategy({
+    clientID: config.fb.appId,
+    clientSecret: config.fb.appSecret,
+    callbackURL: config.constant.url+"/auth/facebook/callback"
+  },
+  function(accessToken, refreshToken, profile, done) {
+    process.nextTick(function () {
+      return done(null, profile);
+    });
+  }
+));
 
 /**
  * library
@@ -41,6 +83,8 @@ app.use(express.logger('dev'));
 app.use(express.cookieParser());
 app.use(express.bodyParser());
 app.use(express.session({ secret: 'mininoic' }));
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(express.json());
 app.use(express.urlencoded());
 app.use(express.methodOverride());
@@ -417,6 +461,62 @@ app.all('/user/auth/delete-event/:token', function(req, res, next){
   });
 });
 
+
+/*
+ * routes for login
+ */
+
+app.get('/account', ensureAuthenticated, function(req, res){
+  res.render('account', { user: req.user });
+});
+
+app.get('/login', function(req, res){
+  return res.send('login');
+});
+
+app.get('/auth/google', 
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  function(req, res) {
+    res.redirect('/');
+  });
+
+app.get('/auth/google/return', 
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  function(req, res) {
+    var user = req.user;
+    var name = user.displayName;
+    var email = user.emails[0].value;
+
+    database.userLogin(name, email, 1);
+    return res.send(email);
+  });
+
+app.get('/auth/facebook',
+  passport.authenticate('facebook'),
+  function(req, res){
+    
+  });
+
+app.get('/auth/facebook/callback', 
+  passport.authenticate('facebook', { failureRedirect: '/login' }),
+  function(req, res) {
+    var user = req.user;
+    var username = user.username;
+    var id = user.id;
+    var name = user.displayName;
+
+    database.userLogin(name, username, 2);
+    return res.send(username);
+  });
+
+app.get('/logout', function(req, res){
+  req.logout();
+  res.redirect('/');
+});
+
+/*
+ * routers for error
+ */
 app.get('/404', function(req, res, next){
   // trigger a 404 since no other middleware
   // will match /404 after this one, and we're not
@@ -441,4 +541,10 @@ http.createServer(app).listen(app.get('port'), function(){
 
   fs.writeFile(__dirname + '/start.log', 'started');
 });
+
+
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) { return next(); }
+  res.redirect('/login')
+}
 
