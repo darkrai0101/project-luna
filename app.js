@@ -353,7 +353,7 @@ app.all('/user/auth-token/:token', function(req, res, next){
             mailer.thankReg(rows[0]['email']);
 
             //return res.send('xac thuc thanh cong');
-            return res.redirect('/#/confirmation/created')
+            return res.redirect('/#/has/created')
           }
         });
       }else{
@@ -361,12 +361,12 @@ app.all('/user/auth-token/:token', function(req, res, next){
         db.query('delete from token  where token = ?',token);
 
         //res.send('ma xac thuc het han');
-        return res.redirect('/#/confirmation/auth-fail-create');
+        return res.redirect('/auth-fail-create');
       }
     }else{
       //res.render('404', {url: req.url});
       //return;
-      return res.redirect('/#/confirmation/auth-fail-create');
+      return res.redirect('/#/has/auth-fail-create');
     }
   });
 });
@@ -445,18 +445,18 @@ app.all('/user/auth/delete-event/:token', function(req, res, next){
           db.query('delete from token where token = ?', token);
 
           //return res.send('xac thuc thanh cong');
-          return res.redirect('/#/confirmation/deleted');
+          return res.redirect('/#/has/deleted');
         }else{
           db.query('delete from token  where token = ?',token);
 
           //return res.send('ma xac thuc het han');
-          return res.redirect('/#/confirmation/auth-fail-delete');
+          return res.redirect('/#/has/auth-fail-delete');
         }
       }else{
 
         //res.render('404', {url: req.url});
         //return;
-        return res.redirect('/#/confirmation/auth-fail-delete');
+        return res.redirect('/#/has/auth-fail-delete');
       }
   });
 });
@@ -487,7 +487,7 @@ app.get('/auth/google/return',
     var name = user.displayName;
     var email = user.emails[0].value;
 
-    database.userLogin(name, email, 1);
+    //database.userLogin(name, email, 1);
     return res.send(email);
   });
 
@@ -505,7 +505,7 @@ app.get('/auth/facebook/callback',
     var id = user.id;
     var name = user.displayName;
 
-    database.userLogin(name, username, 2);
+    //database.userLogin(name, username, 2);
     return res.send(username);
   });
 
