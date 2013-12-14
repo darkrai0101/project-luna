@@ -249,6 +249,7 @@ app.all('/user/quick-create', function(req, res, next){
 
   var arr_calendar = {
         userID    : '',
+        uuid      : option.uuid,
         solarDate : solarDate, 
         message   : option.desc,
         hour      : hour,
@@ -325,6 +326,154 @@ app.all('/user/quick-create', function(req, res, next){
     };
   });
 });
+
+app.all('/user/try-create', function(req, res, next){
+  var option = req.body;
+  if(!option.email){
+    res.render('404', {url: req.url});
+    return;
+  }
+
+  var email = option.email;
+  var uuid = option.uuid;
+  db.query('select * from calendar where uuid = "'+uuid+'" limit 1', function(err, rows, fields){
+    if(err) throw err;
+    if(rows[0]){
+      //neu co roi thi gui lai mail
+      var token = func.createToken();
+      var expire = func.createExpire();
+      var row = rows[0];
+          var arr = {
+              userID     : row.userID,
+              calendarID : row.id,
+              token      : token,
+              expire     : expire
+          };
+          db.query('insert into token set ?', arr, function(err, rows, fields){
+            if(err) throw err;
+            mailer.auth(email, token);
+            return res.send('1');
+          });
+    }else{
+      if(option.period === 'pm') hour = parseInt(option.hour) + 12; else hour = option.hour;
+
+      var solarDate;
+
+      var now = new Date();
+      if(option.repeat == 0){
+        //repeat theo ngay
+        var schedule_date = now.getDate();
+        console.log(schedule_date);
+        if(now.getHours() > hour){
+          schedule_date += 1;
+        }
+        solarDate = func.toStringDate(now.getFullYear(), now.getMonth()+1, schedule_date, hour, option.minute);
+
+      }else if(option.repeat == 1){
+        //repeat theo thang
+        var schedule = amduonglich.getNextSolarDateOfLunarDate(parseInt(option.date));
+        
+        var schedule_date = schedule[0];
+        var schedule_month = schedule[1];
+        var schedule_year = schedule[2];
+
+        solarDate = func.toStringDate(schedule_year, schedule_month, schedule_date, hour, option.minute);
+      }else{
+        //repeat theo nam
+        var schedule = amduonglich.getNextSolarDateOfLunarDateAndMonth(parseInt(option.date), parseInt(option.month));
+        console.log(schedule);
+
+        var schedule_date = schedule[0];
+        var schedule_month = schedule[1];
+        var schedule_year = schedule[2];
+
+        solarDate = func.toStringDate(schedule_year, schedule_month, schedule_date, hour, option.minute);
+      };
+      
+      console.log(solarDate);
+
+      var arr_calendar = {
+            userID    : '',
+            uuid      : option.uuid,
+            solarDate : solarDate, 
+            message   : option.desc,
+            hour      : hour,
+            minute    : option.minute,
+            date      : option.date,
+            month     : option.month,
+            beforeHour: 0,
+            repeatType: option.repeat,
+            active    : 0
+        };
+
+      db.query('select id from users where email = ? limit 1', email, function(err, rows, fields){
+        if(err) throw err;
+
+        var token = func.createToken();
+        var expire = func.createExpire();
+        var userID;
+
+        
+        if(rows[0]){
+          var row = rows[0];
+          console.log(1);
+          userID = row.id;
+
+          arr_calendar.userID = userID;
+
+          db.query('insert into calendar set ?', arr_calendar, function(err, rows, fields){
+              if(err) throw err;
+
+              var calendarID = rows.insertId;
+              var arr = {
+                  userID     : userID,
+                  calendarID : calendarID,
+                  token      : token,
+                  expire     : expire
+              };
+              db.query('insert into token set ?', arr, function(err, rows, fields){
+                if(err) throw err;
+                mailer.auth(email, token);
+                return res.send('1');
+              });
+            });
+
+        }else{
+          var arr = {
+            name   : email,
+            email  : email,
+            status : 0
+          };
+
+          db.query('insert into users set ?', arr, function(err, rows, fields){
+            if(err) throw err;
+            userID = rows.insertId;
+
+            arr_calendar.userID = userID;
+
+            db.query('insert into calendar set ?', arr_calendar, function(err, rows, fields){
+              if(err) throw err;
+
+              var calendarID = rows.insertId;
+              var arr = {
+                  userID     : userID,
+                  calendarID : calendarID,
+                  token      : token,
+                  expire     : expire
+              };
+              db.query('insert into token set ?', arr, function(err, rows, fields){
+                if(err) throw err;
+                mailer.auth(email, token);
+                return res.send('1');
+              });
+            });
+          });
+        };
+      });
+    };
+  });
+});
+
 app.all('/user/auth-token/:token', function(req, res, next){
   var token = req.params.token;
   if(!token){
