@@ -510,11 +510,7 @@ app.all('/user/auth-token/:token', function(req, res, next){
         db.query('delete from token  where token = ?',token);
 
         //res.send('ma xac thuc het han');
-<<<<<<< HEAD
-        return res.redirect('/#/has/auth-fail-create');
-=======
         return res.redirect('/auth-fail-create');
->>>>>>> fec6a1420369fdc696bd40db072dab8f081f1df0
       }
     }else{
       //res.render('404', {url: req.url});
@@ -691,8 +687,6 @@ app.get('/500', function(req, res, next){
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
-
-  fs.writeFile(__dirname + '/start.log', 'started');
 });
 
 

@@ -1,6 +1,10 @@
 
 var config = require('./config/config');
 
+var home_dir = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE;
+var local_dir = (home_dir+'/local/project-luna');
+//var static_dir = (home_dir+'/Github/Luna/dist');
+var static_dir = (home_dir+'/repo/dev/Luna/dist');
 /**
  * Module dependencies.
  */
@@ -89,7 +93,7 @@ app.use(express.json());
 app.use(express.urlencoded());
 app.use(express.methodOverride());
 app.use(app.router);
-app.use(express.static(path.join(__dirname, '../Luna/dist')));
+app.use(express.static(static_dir)));
 
 // development only
 if ('development' == app.get('env')) {
@@ -538,8 +542,6 @@ app.get('/500', function(req, res, next){
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
-
-  fs.writeFile(__dirname + '/start.log', 'started');
 });
 
 
