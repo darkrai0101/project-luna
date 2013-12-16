@@ -74,7 +74,7 @@ var app = module.exports = express();
 var silent = 'test' == process.env.NODE_ENV;
 
 // all environments
-app.set('port', process.env.PORT || 3000);
+app.set('port', process.env.PORT || 3001);
 app.set('views', path.join(__dirname, '../Luna/dist'));
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
@@ -391,11 +391,11 @@ app.all('/user/delete-event/:email', function(req, res, next){
 
         switch(row.repeatType){
           case 0:
-            time = 'V√†o '+row.hour+' gi·ªù '+row.minute+' ph√∫t h√†ng ng√†y';
+            time = 'V‡o '+row.hour+' gi? '+row.minute+' ph˙t h‡ng ng‡y';
           case 1:
-            time = 'V√†o '+row.hour+' gi·ªù '+row.minute+' ng√†y '+row.date+' h√†ng th√°ng';
+            time = 'V‡o '+row.hour+' gi? '+row.minute+' ng‡y '+row.date+' h‡ng th·ng';
           case 2:
-            time = 'V√†o '+row.hour+' gi·ªù '+row.minute+' ng√†y '+row.date+' th√°ng '+row.month+' h√†ng th√°ng';
+            time = 'V‡o '+row.hour+' gi? '+row.minute+' ng‡y '+row.date+' th·ng '+row.month+' h‡ng th·ng';
         };
 
         var message = row.message;
