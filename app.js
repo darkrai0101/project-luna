@@ -128,69 +128,17 @@ app.use(function(err, req, res, next){
 // scheduling
 
 setInterval(function(){
-
-  var now = moment().zone("+07:00");
-  var now_string = moment(now).format('YYYY-MM-DD');
-  var now_hour = now.hours();
-  var now_minute = now.minutes();
   db.query('select * from calendar where active = 1', function(err, rows, fields){
     if(err) throw err;
     if(rows[0]){
-
-      for(var p in rows){
-        var row = rows[p];
-        var date = moment(row.solarDate);
-        var date_string = date.format('YYYY-MM-DD');
-        
-        if(date_string === now_string){
-          var hour = date.hours();
-          if(now_hour === hour){
-            var minute = date.minutes();
-            if(now_minute < minute + 5 && now_minute > minute - 5){
-
-              var schedule = row;
-              console.log(now_hour+':'+now.minute+' alarm alarm : '+schedule.userID+' - '+schedule.message);
-              db.query('select email from users where id = ? limit 1', row.userID, function(err, rows, fields){
-                  mailer.noti(rows[0]['email'], schedule.message);
-              });
-
-              var repeatType = row.repeatType;
-              var solarDate = new Date();
-              
-              if(repeatType == 0){
-                // update lai ngay: ngay + 1
-                var day = solarDate.getDate() + 1;
-                solarDate.setDate(day);
-
-                console.log(solarDate);
-              }else if(repeatType == 1){
-                // update lai ngay moi cua thang sau
-                var nextDate = amduonglich.getNextSolarDateOfLunarDate(parseInt(schedule.date));
-                console.log(nextDate);
-                solarDate.setDate(nextDate[0]);
-                solarDate.setMonth(nextDate[1]-1);
-                solarDate.setFullYear(nextDate[2]);
-
-              }else{
-                // update lai ngay thang moi nam sau
-                var nextDateMonth = amduonglich.getNextSolarDateOfLunarDateAndMonth(parseInt(schedule.date), parseInt(schedule.month));
-                solarDate.setDate(nextDate[0]);
-                solarDate.setMonth(nextDate[1]-1);
-                solarDate.setFullYear(nextDate[2]);
-              }
-              console.log(solarDate);
-              var solarDateString = func.toStringDate(solarDate.getFullYear(), solarDate.getMonth()+1, solarDate.getDate(), schedule.hour, schedule.minute);
-              console.log('string - '+solarDateString);
-              db.query('update calendar set solarDate = "'+solarDateString+'" where id = ?', schedule.id);
-            }
-          }
-        }
+      for(var p = 0; p < rows.length; p++){
+        schedule(rows[p]);
       }
     }else{
       console.log('Khong co nhac nho nao...');
     }
   });
-}, 4000);
+}, 400000);
 
 
  // ROUTES
@@ -695,3 +643,55 @@ function ensureAuthenticated(req, res, next) {
   res.redirect('/login')
 }
 
+function schedule(row){
+        var now = moment().zone("+07:00");
+        var now_string = moment(now).format('YYYY-MM-DD');
+        var now_hour = now.hours();
+        var now_minute = now.minutes();
+        var date = moment(row.solarDate);
+        var date_string = date.format('YYYY-MM-DD');
+        
+        if(date_string === now_string){
+          var hour = date.hours();
+          if(now_hour === hour){
+            var minute = date.minutes();
+            if(now_minute + 5 > minute && now_minute - 5 < minute){
+
+              var schedule = row;
+              console.log(now_hour+':'+now.minute+' alarm alarm : '+schedule.userID+' - '+schedule.message);
+              db.query('select email from users where id = ? limit 1', row.userID, function(err, rows, fields){
+                  mailer.noti(rows[0]['email'], schedule.message);
+              });
+
+              var repeatType = row.repeatType;
+              var solarDate = new Date();
+              
+              if(repeatType == 0){
+                // update lai ngay: ngay + 1
+                var day = solarDate.getDate() + 1;
+                solarDate.setDate(day);
+
+                console.log(solarDate);
+              }else if(repeatType == 1){
+                // update lai ngay moi cua thang sau
+                var nextDate = amduonglich.getNextSolarDateOfLunarDate(parseInt(schedule.date));
+                console.log(nextDate);
+                solarDate.setDate(nextDate[0]);
+                solarDate.setMonth(nextDate[1]-1);
+                solarDate.setFullYear(nextDate[2]);
+
+              }else{
+                // update lai ngay thang moi nam sau
+                var nextDateMonth = amduonglich.getNextSolarDateOfLunarDateAndMonth(parseInt(schedule.date), parseInt(schedule.month));
+                solarDate.setDate(nextDate[0]);
+                solarDate.setMonth(nextDate[1]-1);
+                solarDate.setFullYear(nextDate[2]);
+              }
+              console.log(solarDate);
+              var solarDateString = func.toStringDate(solarDate.getFullYear(), solarDate.getMonth()+1, solarDate.getDate(), schedule.hour, schedule.minute);
+              console.log('string - '+solarDateString);
+              db.query('update calendar set solarDate = "'+solarDateString+'" where id = ?', schedule.id);
+            }
+          }
+        }
+}
