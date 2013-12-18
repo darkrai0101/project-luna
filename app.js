@@ -240,11 +240,11 @@ app.all('/user/quick-create', function(req, res, next){
             var time;
             switch(arr_calendar.repeatType){
               case 0:
-                time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' phút hàng ngày';
+                time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' phút hàng ngày';break;
               case 1:
-                time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+arr_calendar.date+' hàng tháng';
+                time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+(arr_calendar.date == 100 ? 'cuối' : arr_calendar.date)+' hàng tháng';break;
               case 2:
-                time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+arr_calendar.date+' tháng '+arr_calendar.month+' hàng năm';
+                time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+(arr_calendar.date == 100 ? 'cuối' : arr_calendar.date)+' tháng '+arr_calendar.month+' hàng năm';break;
             };
             mailer.auth(email, token, arr_calendar.message, time);
             return res.send('1');
@@ -285,11 +285,11 @@ app.all('/user/quick-create', function(req, res, next){
             var time;
             switch(arr_calendar.repeatType){
               case 0:
-                time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' phút hàng ngày';
+                time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' phút hàng ngày';break;
               case 1:
-                time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+arr_calendar.date+' hàng tháng';
+                time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+(arr_calendar.date == 100 ? 'cuối' : arr_calendar.date)+' hàng tháng';break;
               case 2:
-                time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+arr_calendar.date+' tháng '+arr_calendar.month+' hàng năm';
+                time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+(arr_calendar.date == 100 ? 'cuối' : arr_calendar.date)+' tháng '+arr_calendar.month+' hàng năm';break;
             };
             mailer.auth(email, token, arr_calendar.message, time);
             return res.send('1');
@@ -416,11 +416,11 @@ app.all('/user/try-create', function(req, res, next){
                 var time;
                 switch(arr_calendar.repeatType){
                   case 0:
-                    time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' phút hàng ngày';
+                    time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' phút hàng ngày';break;
                   case 1:
-                    time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+arr_calendar.date+' hàng tháng';
+                    time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+(arr_calendar.date == 100 ? 'cuối' : arr_calendar.date)+' hàng tháng';break;
                   case 2:
-                    time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+arr_calendar.date+' tháng '+arr_calendar.month+' hàng năm';
+                    time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+(arr_calendar.date == 100 ? 'cuối' : arr_calendar.date)+' tháng '+arr_calendar.month+' hàng năm';break;
                 };
                 mailer.auth(email, token, arr_calendar.message, time);
                 return res.send('1');
@@ -459,11 +459,11 @@ app.all('/user/try-create', function(req, res, next){
                 var time;
                 switch(arr_calendar.repeatType){
                   case 0:
-                    time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' phút hàng ngày';
+                    time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' phút hàng ngày';break;
                   case 1:
-                    time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+arr_calendar.date+' hàng tháng';
+                    time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+(arr_calendar.date == 100 ? 'cuối' : arr_calendar.date)+' hàng tháng';break;
                   case 2:
-                    time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+arr_calendar.date+' tháng '+arr_calendar.month+' hàng năm';
+                    time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+(arr_calendar.date == 100 ? 'cuối' : arr_calendar.date)+' tháng '+arr_calendar.month+' hàng năm';break;
                 };
                 mailer.auth(email, token, arr_calendar.message, time);
                 return res.send('1');
@@ -563,11 +563,11 @@ app.all('/user/delete-event/:email', function(req, res, next){
 
         switch(row.repeatType){
           case 0:
-            time = 'Vào '+row.hour+' giờ '+row.minute+' phút hàng ngày';
+            time = 'Vào '+row.hour+' giờ '+row.minute+' phút hàng ngày';break;
           case 1:
-            time = 'Vào '+row.hour+' giờ '+row.minute+' ngày '+row.date+' hàng tháng';
+            time = 'Vào '+row.hour+' giờ '+row.minute+' ngày '+(row.date == 100 ? 'cuối' : row.date)+' hàng tháng';break;
           case 2:
-            time = 'Vào '+row.hour+' giờ '+row.minute+' ngày '+row.date+' tháng '+row.month+' hàng tháng';
+            time = 'Vào '+row.hour+' giờ '+row.minute+' ngày '+(row.date == 100 ? 'cuối' : row.date)+' tháng '+row.month+' hàng năm';break;
         };
 
         var message = row.message;
@@ -729,7 +729,7 @@ app.get('/500', function(req, res, next){
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
-  console.log('master: version 2.1');
+  console.log('master: version 2.1.2');
 });
 
 
@@ -760,11 +760,11 @@ function schedule(row){
                   var time = '';
                   switch(arr_calendar.repeatType){
                     case 0:
-                      time = 'Vào '+hour+' giờ '+schedule.minute+' phút hàng ngày';
+                      time = 'Vào '+hour+' giờ '+schedule.minute+' phút hàng ngày';break;
                     case 1:
-                      time = 'Vào '+hour+' giờ '+schedule.minute+' ngày '+schedule.date+' hàng tháng';
+                      time = 'Vào '+hour+' giờ '+schedule.minute+' ngày '+(schedule.date == 100 ? 'cuối' : schedule.date)+' hàng tháng';break;
                     case 2:
-                      time = 'Vào '+hour+' giờ '+schedule.minute+' ngày '+schedule.date+' tháng '+schedule.month+' hàng năm';
+                      time = 'Vào '+hour+' giờ '+schedule.minute+' ngày '+(schedule.date == 100 ? 'cuối' : schedule.date)+' tháng '+schedule.month+' hàng năm';break
                   };
                   mailer.noti(rows[0]['email'], schedule.message, time);
               });
