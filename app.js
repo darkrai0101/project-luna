@@ -166,7 +166,6 @@ app.all('/user/quick-create', function(req, res, next){
   if(option.repeat == 0){
     //repeat theo ngay
     var schedule_date = now.getDate();
-    console.log(schedule_date);
     if(now.getHours() > hour){
       schedule_date += 1;
     }
@@ -174,7 +173,7 @@ app.all('/user/quick-create', function(req, res, next){
 
   }else if(option.repeat == 1){
     //repeat theo thang
-    var schedule = amduonglich.getNextSolarDateOfLunarDate(parseInt(option.date));
+    var schedule = amduonglich.getNextSolarDateOfLunarDate(parseInt(option.minute), parseInt(hour), parseInt(option.date));
     
     var schedule_date = schedule[0];
     var schedule_month = schedule[1];
@@ -183,8 +182,7 @@ app.all('/user/quick-create', function(req, res, next){
     solarDate = func.toStringDate(schedule_year, schedule_month, schedule_date, hour, option.minute);
   }else{
     //repeat theo nam
-    var schedule = amduonglich.getNextSolarDateOfLunarDateAndMonth(parseInt(option.date), parseInt(option.month));
-    console.log(schedule);
+    var schedule = amduonglich.getNextSolarDateOfLunarDateAndMonth(parseInt(option.minute), parseInt(hour), parseInt(option.date), parseInt(option.month));
 
     var schedule_date = schedule[0];
     var schedule_month = schedule[1];
@@ -192,8 +190,6 @@ app.all('/user/quick-create', function(req, res, next){
 
     solarDate = func.toStringDate(schedule_year, schedule_month, schedule_date, hour, option.minute);
   };
-  
-  console.log(solarDate);
 
   var arr_calendar = {
         userID    : '',
@@ -212,12 +208,15 @@ app.all('/user/quick-create', function(req, res, next){
   db.query('select id from users where email = ? limit 1', email, function(err, rows, fields){
     if(err) throw err;
 
+    console.log('user-quick-create: get record from users...');
+
     var token = func.createToken();
     var expire = func.createExpire();
     var userID;
 
     
     if(rows[0]){
+      console.log('user-quick-create: exists record...');
       var row = rows[0];
       userID = row.id;
 
@@ -227,6 +226,8 @@ app.all('/user/quick-create', function(req, res, next){
           if(err) throw err;
 
           var calendarID = rows.insertId;
+          console.log('user-quick-create: insert record into calendar: '+calendarID);
+
           var arr = {
               userID     : userID,
               calendarID : calendarID,
@@ -235,12 +236,23 @@ app.all('/user/quick-create', function(req, res, next){
           };
           db.query('insert into token set ?', arr, function(err, rows, fields){
             if(err) throw err;
-            mailer.auth(email, token);
+            console.log('user-quick-create: insert record into token: '+rows.insertId);
+            var time;
+            switch(arr_calendar.repeatType){
+              case 0:
+                time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' phút hàng ngày';
+              case 1:
+                time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+arr_calendar.date+' hàng tháng';
+              case 2:
+                time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+arr_calendar.date+' tháng '+arr_calendar.month+' hàng năm';
+            };
+            mailer.auth(email, token, arr_calendar.message, time);
             return res.send('1');
           });
         });
 
     }else{
+      console.log('user-quick-create: NOT exists record...');
       var arr = {
         name   : email,
         email  : email,
@@ -251,12 +263,16 @@ app.all('/user/quick-create', function(req, res, next){
         if(err) throw err;
         userID = rows.insertId;
 
+        console.log('user-quick-create: insert record into users: '+userID);
+
         arr_calendar.userID = userID;
 
         db.query('insert into calendar set ?', arr_calendar, function(err, rows, fields){
           if(err) throw err;
 
           var calendarID = rows.insertId;
+          console.log('user-quick-create: insert record into calendar: '+calendarID);
+
           var arr = {
               userID     : userID,
               calendarID : calendarID,
@@ -265,7 +281,17 @@ app.all('/user/quick-create', function(req, res, next){
           };
           db.query('insert into token set ?', arr, function(err, rows, fields){
             if(err) throw err;
-            mailer.auth(email, token);
+            console.log('user-quick-create: insert record into token: '+rows.insertId);
+            var time;
+            switch(arr_calendar.repeatType){
+              case 0:
+                time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' phút hàng ngày';
+              case 1:
+                time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+arr_calendar.date+' hàng tháng';
+              case 2:
+                time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+arr_calendar.date+' tháng '+arr_calendar.month+' hàng năm';
+            };
+            mailer.auth(email, token, arr_calendar.message, time);
             return res.send('1');
           });
         });
@@ -285,7 +311,10 @@ app.all('/user/try-create', function(req, res, next){
   var uuid = option.uuid;
   db.query('select * from calendar where uuid = "'+uuid+'" limit 1', function(err, rows, fields){
     if(err) throw err;
+
+    console.log('user-try-create: get record form calendar...');
     if(rows[0]){
+      console.log('user-try-create: exists record...');
       //neu co roi thi gui lai mail
       var token = func.createToken();
       var expire = func.createExpire();
@@ -298,10 +327,12 @@ app.all('/user/try-create', function(req, res, next){
           };
           db.query('insert into token set ?', arr, function(err, rows, fields){
             if(err) throw err;
+            console.log('user-try-create: insert into token: '+rows.insertId);
             mailer.auth(email, token);
             return res.send('1');
           });
     }else{
+      console.log('user-try-create: NOT exists record...');
       if(option.period === 'pm') hour = parseInt(option.hour) + 12; else hour = option.hour;
 
       var solarDate;
@@ -318,7 +349,7 @@ app.all('/user/try-create', function(req, res, next){
 
       }else if(option.repeat == 1){
         //repeat theo thang
-        var schedule = amduonglich.getNextSolarDateOfLunarDate(parseInt(option.date));
+        var schedule = amduonglich.getNextSolarDateOfLunarDate(parseInt(option.minute), parseInt(hour), parseInt(option.date));
         
         var schedule_date = schedule[0];
         var schedule_month = schedule[1];
@@ -327,7 +358,7 @@ app.all('/user/try-create', function(req, res, next){
         solarDate = func.toStringDate(schedule_year, schedule_month, schedule_date, hour, option.minute);
       }else{
         //repeat theo nam
-        var schedule = amduonglich.getNextSolarDateOfLunarDateAndMonth(parseInt(option.date), parseInt(option.month));
+        var schedule = amduonglich.getNextSolarDateOfLunarDateAndMonth(parseInt(option.minute), parseInt(hour), parseInt(option.date), parseInt(option.month));
         console.log(schedule);
 
         var schedule_date = schedule[0];
@@ -355,13 +386,14 @@ app.all('/user/try-create', function(req, res, next){
 
       db.query('select id from users where email = ? limit 1', email, function(err, rows, fields){
         if(err) throw err;
-
+        console.log('user-try-create: checking exists email...');
         var token = func.createToken();
         var expire = func.createExpire();
         var userID;
 
         
         if(rows[0]){
+          console.log('user-try-create: exists record...');
           var row = rows[0];
           console.log(1);
           userID = row.id;
@@ -370,7 +402,7 @@ app.all('/user/try-create', function(req, res, next){
 
           db.query('insert into calendar set ?', arr_calendar, function(err, rows, fields){
               if(err) throw err;
-
+              console.log('user-try-create: insert into calendar: '+rows.insertId);
               var calendarID = rows.insertId;
               var arr = {
                   userID     : userID,
@@ -380,12 +412,24 @@ app.all('/user/try-create', function(req, res, next){
               };
               db.query('insert into token set ?', arr, function(err, rows, fields){
                 if(err) throw err;
-                mailer.auth(email, token);
+                console.log('user-try-create: insert into token: '+rows.insertId);
+                var time;
+                switch(arr_calendar.repeatType){
+                  case 0:
+                    time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' phút hàng ngày';
+                  case 1:
+                    time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+arr_calendar.date+' hàng tháng';
+                  case 2:
+                    time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+arr_calendar.date+' tháng '+arr_calendar.month+' hàng năm';
+                };
+                mailer.auth(email, token, arr_calendar.message, time);
                 return res.send('1');
               });
             });
 
         }else{
+
+          console.log('user-try-create: NOT exists record...');
           var arr = {
             name   : email,
             email  : email,
@@ -394,13 +438,14 @@ app.all('/user/try-create', function(req, res, next){
 
           db.query('insert into users set ?', arr, function(err, rows, fields){
             if(err) throw err;
+            console.log('user-try-create: insert into users: '+rows.insertId);
             userID = rows.insertId;
 
             arr_calendar.userID = userID;
 
             db.query('insert into calendar set ?', arr_calendar, function(err, rows, fields){
               if(err) throw err;
-
+              console.log('user-try-create: insert into calendar: '+rows.insertId);
               var calendarID = rows.insertId;
               var arr = {
                   userID     : userID,
@@ -410,7 +455,17 @@ app.all('/user/try-create', function(req, res, next){
               };
               db.query('insert into token set ?', arr, function(err, rows, fields){
                 if(err) throw err;
-                mailer.auth(email, token);
+                console.log('user-try-create: insert into token: '+rows.insertId);
+                var time;
+                switch(arr_calendar.repeatType){
+                  case 0:
+                    time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' phút hàng ngày';
+                  case 1:
+                    time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+arr_calendar.date+' hàng tháng';
+                  case 2:
+                    time = 'Vào '+arr_calendar.hour+' giờ '+arr_calendar.minute+' ngày '+arr_calendar.date+' tháng '+arr_calendar.month+' hàng năm';
+                };
+                mailer.auth(email, token, arr_calendar.message, time);
                 return res.send('1');
               });
             });
@@ -429,9 +484,9 @@ app.all('/user/auth-token/:token', function(req, res, next){
   };
 
   token = encodeURIComponent(token);
-
   db.query('select * from token where token = ? limit 1', token, function(err, rows, fiels){
     if(err) throw err;
+    console.log('user-auth-token: get record from token...');
     if(rows[0]){
       row = rows[0];
       var expire = row['expire'];
@@ -439,22 +494,39 @@ app.all('/user/auth-token/:token', function(req, res, next){
       var now = new Date().getTime();
 
       if(now < expire){
+        console.log('user-auth-token: token in expire...');
         var userID = row['userID'];
-        db.query('update calendar set active = 1 where id = ?', calendarID);
-        db.query('delete from token where token = ?', token);
+        db.query('update calendar set active = 1 where id = ?', calendarID, function(err, rows, fields){
+          if(err) throw err;
+          console.log('user-auth-token: update calendar is active: '+calendarID);
+        });
+        db.query('delete from token where token = ?', token, function(err, rows, fields){
+          if(err) throw err;
+          console.log('user-auth-token: delete record in token: '+token);
+        });
 
         db.query('select email from users where id = ?', userID, function(err, rows, fields){
           if(err) throw err;
           if(rows[0]){
-            mailer.thankReg(rows[0]['email']);
+            console.log('user-auth-token: get email form users...');
 
+            mailer.thankReg(rows[0]['email']);
             //return res.send('xac thuc thanh cong');
             return res.redirect('/#/has/created')
           }
         });
       }else{
-        db.query('delete from calendar  where id = ?',calendarID);
-        db.query('delete from token  where token = ?',token);
+        console.log('user-auth-token: token out of expire...');
+
+        db.query('delete from calendar  where id = ?',calendarID, function(err, rows, fields){
+          if(err) throw err;
+          console.log('user-auth-token: delete record calendar: '+calendarID);
+        });
+
+        db.query('delete from token  where token = ?',token, function(err, rows, fields){
+          if(err) throw err;
+          console.log('user-auth-token: delete record from token: '+token);
+        });
 
         //res.send('ma xac thuc het han');
         return res.redirect('/auth-fail-create');
@@ -477,8 +549,11 @@ app.all('/user/delete-event/:email', function(req, res, next){
 
   db.query('select * from users left join calendar on users.id = calendar.userID where users.email = "'+email+'" and calendar.active = 1', function(err, rows, fields){
     if(err) throw err;
+
+    console.log('user-delete-event: get record from users join calendar...');
     if(rows[0]){
 
+      console.log('user-delete-event: exists record...');
       var option = [];
       var time = '';
       var expire = func.createExpire();
@@ -511,11 +586,15 @@ app.all('/user/delete-event/:email', function(req, res, next){
           expire: expire
         };
 
-        db.query('insert into token set ?', arr);
+        db.query('insert into token set ?', arr, function(err, rows, fields){
+          if(err) throw err;
+          console.log('user-delete-event: insert record into token: '+rows.insertId);
+        });
       }
       mailer.deleteEvent(email, option);
       return res.send('1');
     }else{
+      console.log('user-delete-event: not exists record...');
       return res.send('0');
     }
   });
@@ -531,6 +610,8 @@ app.all('/user/auth/delete-event/:token', function(req, res, next){
 
   db.query('select * from token where token = ? limit 1', token, function(err, rows, fields){
       if(err) throw err;
+
+      console.log('auth-delete-event: checking token...');
       if(rows[0]){
         row = rows[0];
         var expire = row['expire'];
@@ -538,14 +619,27 @@ app.all('/user/auth/delete-event/:token', function(req, res, next){
         var now = new Date().getTime();
 
         if(now < expire){
-          db.query('delete from calendar where id = ?', calendarID);
-          db.query('delete from token where token = ?', token);
+          console.log('auth-delete-event: time in expire...');
+
+          db.query('delete from calendar where id = ?', calendarID, function(err, rows, fields){
+            if(err) throw err;
+            console.log('auth-delete-event: delete record in calendar: '+calendarID);
+          });
+          db.query('delete from token where token = ?', token, function(err, rows, fields){
+            if(err) throw err;
+            console.log('auth-delete-event: delete rerord in token: '+token);
+          });
 
           //return res.send('xac thuc thanh cong');
           return res.redirect('/#/has/deleted');
         }else{
-          db.query('delete from token  where token = ?',token);
 
+          console.log('auth-delete-event: token out of expire');
+
+          db.query('delete from token  where token = ?',token, function(err, rows, fields){
+            if(err) throw err;
+            console.log('auth-delete-event: delete record in token: '+token);
+          });
           //return res.send('ma xac thuc het han');
           return res.redirect('/#/has/auth-fail-delete');
         }
@@ -635,7 +729,7 @@ app.get('/500', function(req, res, next){
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
-  console.log('master: version 2.0');
+  console.log('master: version 2.1');
 });
 
 
@@ -659,9 +753,20 @@ function schedule(row){
             if(now_minute + 5 > minute && now_minute - 5 < minute){
 
               var schedule = row;
-              console.log(now_hour+':'+now.minute+' alarm alarm : '+schedule.userID+' - '+schedule.message);
+              console.log('schedule: '+now_hour+':'+now.minute+'  Notification: '+schedule.userID+' - '+schedule.message);
               db.query('select email from users where id = ? limit 1', row.userID, function(err, rows, fields){
-                  mailer.noti(rows[0]['email'], schedule.message);
+                  if(err) throw err;
+                  console.log('schedule: get email form users: '+row.userID);
+                  var time = '';
+                  switch(arr_calendar.repeatType){
+                    case 0:
+                      time = 'Vào '+hour+' giờ '+schedule.minute+' phút hàng ngày';
+                    case 1:
+                      time = 'Vào '+hour+' giờ '+schedule.minute+' ngày '+schedule.date+' hàng tháng';
+                    case 2:
+                      time = 'Vào '+hour+' giờ '+schedule.minute+' ngày '+schedule.date+' tháng '+schedule.month+' hàng năm';
+                  };
+                  mailer.noti(rows[0]['email'], schedule.message, time);
               });
 
               var repeatType = row.repeatType;
@@ -672,26 +777,27 @@ function schedule(row){
                 var day = solarDate.getDate() + 1;
                 solarDate.setDate(day);
 
-                console.log(solarDate);
               }else if(repeatType == 1){
                 // update lai ngay moi cua thang sau
-                var nextDate = amduonglich.getNextSolarDateOfLunarDate(parseInt(schedule.date));
-                console.log(nextDate);
+                var nextDate = amduonglich.getNextSolarDateOfLunarDate(parseInt(minute), parseInt(hour), parseInt(schedule.date));
+      
                 solarDate.setDate(nextDate[0]);
                 solarDate.setMonth(nextDate[1]-1);
                 solarDate.setFullYear(nextDate[2]);
 
               }else{
                 // update lai ngay thang moi nam sau
-                var nextDateMonth = amduonglich.getNextSolarDateOfLunarDateAndMonth(parseInt(schedule.date), parseInt(schedule.month));
+                var nextDateMonth = amduonglich.getNextSolarDateOfLunarDateAndMonth(parseInt(minute), parseInt(hour),parseInt(schedule.date), parseInt(schedule.month));
                 solarDate.setDate(nextDate[0]);
                 solarDate.setMonth(nextDate[1]-1);
                 solarDate.setFullYear(nextDate[2]);
               }
-              console.log(solarDate);
+      
               var solarDateString = func.toStringDate(solarDate.getFullYear(), solarDate.getMonth()+1, solarDate.getDate(), schedule.hour, schedule.minute);
-              console.log('string - '+solarDateString);
-              db.query('update calendar set solarDate = "'+solarDateString+'" where id = ?', schedule.id);
+              db.query('update calendar set solarDate = "'+solarDateString+'" where id = ?', schedule.id, function(err, rows, fields){
+                if(err) throw err;
+                console.log('schedule: update calendar: '+schedule.id);
+              });
             }
           }
         }
