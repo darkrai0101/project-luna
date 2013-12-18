@@ -219,7 +219,6 @@ app.all('/user/quick-create', function(req, res, next){
     
     if(rows[0]){
       var row = rows[0];
-      console.log(1);
       userID = row.id;
 
       arr_calendar.userID = userID;
@@ -470,12 +469,13 @@ app.all('/user/auth-token/:token', function(req, res, next){
 
 app.all('/user/delete-event/:email', function(req, res, next){
   var email = req.params.email;
+  console.log(email);
   if(!email){
     res.render('404', {url: req.url});
     return;
   }
 
-  db.query('select * from users left join calendar on users.id = calendar.userID where users.email = ? and calendar.active = 1',email, function(err, rows, fields){
+  db.query('select * from users left join calendar on users.id = calendar.userID where users.email = "'+email+'" and calendar.active = 1', function(err, rows, fields){
     if(err) throw err;
     if(rows[0]){
 
@@ -635,6 +635,7 @@ app.get('/500', function(req, res, next){
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
+  console.log('master: version 2.0');
 });
 
 
