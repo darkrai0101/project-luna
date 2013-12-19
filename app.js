@@ -156,7 +156,7 @@ app.all('/user/quick-create', function(req, res, next){
     res.render('404', {url: req.url});
     return;
   }
-
+  console.log(option);
   var email = option.email;
   if(option.period === 'pm') hour = parseInt(option.hour) + 12; else hour = option.hour;
 
@@ -193,7 +193,7 @@ app.all('/user/quick-create', function(req, res, next){
 
   var arr_calendar = {
         userID    : '',
-        uuid      : option.uuid,
+        uuid      : option.udid,
         solarDate : solarDate, 
         message   : option.desc,
         hour      : hour,
@@ -246,6 +246,8 @@ app.all('/user/quick-create', function(req, res, next){
               case 2:
                 time = 'Vào '+arr_calendar.hour+' giờ '+(arr_calendar.minute < 0 ? '0':'') + arr_calendar.minute +' phút ngày '+(arr_calendar.date == 100 ? 'cuối' : arr_calendar.date)+' tháng '+arr_calendar.month+' hàng năm';break;
             };
+
+            console.log('user-quick-create: mailing... '+email+' - '+token+' - '+arr_calendar.message+' - '+time);
             mailer.auth(email, token, arr_calendar.message, time);
             return res.send('1');
           });
@@ -291,6 +293,8 @@ app.all('/user/quick-create', function(req, res, next){
               case 2:
                 time = 'Vào '+arr_calendar.hour+' giờ '+(arr_calendar.minute < 0 ? '0':'') + arr_calendar.minute +' phút ngày '+(arr_calendar.date == 100 ? 'cuối' : arr_calendar.date)+' tháng '+arr_calendar.month+' hàng năm';break;
             };
+
+            console.log('user-quick-create: mailing... '+email+' - '+token+' - '+arr_calendar.message+' - '+time);
             mailer.auth(email, token, arr_calendar.message, time);
             return res.send('1');
           });
@@ -308,7 +312,7 @@ app.all('/user/try-create', function(req, res, next){
   }
 
   var email = option.email;
-  var uuid = option.uuid;
+  var uuid = option.udid;
   db.query('select * from calendar where uuid = "'+uuid+'" limit 1', function(err, rows, fields){
     if(err) throw err;
 
@@ -328,7 +332,18 @@ app.all('/user/try-create', function(req, res, next){
           db.query('insert into token set ?', arr, function(err, rows, fields){
             if(err) throw err;
             console.log('user-try-create: insert into token: '+rows.insertId);
-            mailer.auth(email, token);
+
+            var time = '';
+            switch(row.repeatType){
+              case 0:
+                time = 'Vào '+row.hour+' giờ '+(row.minute < 10 ? '0':'') + row.minute +' phút hàng ngày';break;
+              case 1:
+                time = 'Vào '+row.hour+' giờ '+(row.minute < 10 ? '0':'') + row.minute +' phút ngày '+(row.date == 100 ? 'cuối' : row.date)+' hàng tháng';break;
+              case 2:
+                time = 'Vào '+row.hour+' giờ '+(row.minute < 10 ? '0':'') + row.minute +' phút ngày '+(row.date == 100 ? 'cuối' : row.date)+' tháng '+row.month+' hàng năm';break;
+            };
+            console.log('user-try-create: mailing... '+email+' - '+token+' - '+row.message+' - '+time);
+            mailer.auth(email, token, row.message, time);
             return res.send('1');
           });
     }else{
@@ -422,6 +437,8 @@ app.all('/user/try-create', function(req, res, next){
                   case 2:
                     time = 'Vào '+arr_calendar.hour+' giờ '+(arr_calendar.minute < 0 ? '0':'') + arr_calendar.minute +' phút ngày '+(arr_calendar.date == 100 ? 'cuối' : arr_calendar.date)+' tháng '+arr_calendar.month+' hàng năm';break;
                 };
+
+                console.log('user-try-create: mailing... '+email+' - '+token+' - '+arr_calendar.message+' - '+time);
                 mailer.auth(email, token, arr_calendar.message, time);
                 return res.send('1');
               });
@@ -465,6 +482,8 @@ app.all('/user/try-create', function(req, res, next){
                   case 2:
                     time = 'Vào '+arr_calendar.hour+' giờ '+(arr_calendar.minute < 0 ? '0':'') + arr_calendar.minute +' phút ngày '+(arr_calendar.date == 100 ? 'cuối' : arr_calendar.date)+' tháng '+arr_calendar.month+' hàng năm';break;
                 };
+
+                console.log('user-try-create: mailing... '+email+' - '+token+' - '+arr_calendar.message+' - '+time);
                 mailer.auth(email, token, arr_calendar.message, time);
                 return res.send('1');
               });
@@ -510,6 +529,7 @@ app.all('/user/auth-token/:token', function(req, res, next){
           if(rows[0]){
             console.log('user-auth-token: get email form users...');
 
+            console.log('user-auth-token: mailing... '+rows[0]['email']);
             mailer.thankReg(rows[0]['email']);
             //return res.send('xac thuc thanh cong');
             return res.redirect('/#/has/created')
@@ -591,6 +611,7 @@ app.all('/user/delete-event/:email', function(req, res, next){
           console.log('user-delete-event: insert record into token: '+rows.insertId);
         });
       }
+      console.log('user-delete-event: mailing... '+email+' - '+JSON.stringify(option));
       mailer.deleteEvent(email, option);
       return res.send('1');
     }else{
@@ -729,7 +750,7 @@ app.get('/500', function(req, res, next){
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
-  console.log('master: version 2.1.2');
+  console.log('master: version 2.1.8');
 });
 
 
@@ -766,6 +787,7 @@ function schedule(row){
                     case 2:
                       time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút ngày '+(schedule.date == 100 ? 'cuối' : schedule.date)+' tháng '+schedule.month+' hàng năm';break
                   };
+                  console.log('schedule: mailing... '+rows[0]['email']+' - '+schedule.message+' - '+time);
                   mailer.noti(rows[0]['email'], schedule.message, time);
               });
 
