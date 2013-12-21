@@ -138,7 +138,20 @@ setInterval(function(){
       console.log('Khong co nhac nho nao...');
     }
   });
-}, 400000);
+
+  //repeat mail error
+  db.query('select * from mail_error', function(err, rows, fields){
+    if(err) throw err;
+    if(rows[0]){
+      for(var q = 0; q < rows.length; q++){
+        mailErr(rows[q]);
+      }
+    }else{
+      console.log('Khong co mail gui loi...');
+    }
+  });
+  console.log('scheduling...');
+}, 40000);
 
 
  // ROUTES
@@ -672,8 +685,6 @@ app.all('/user/auth/delete-event/:token', function(req, res, next){
       }
   });
 });
-
-
 /*
  * routes for login
  */
@@ -749,6 +760,9 @@ app.get('/500', function(req, res, next){
 });
 
 http.createServer(app).listen(app.get('port'), function(){
+  var now = moment().zone("+07:00");
+  var now_string = moment(now).format('YYYY-MM-DD HH:mm:ss');
+  console.log(now_string);
   console.log('Express server listening on port ' + app.get('port'));
   console.log('master: version 2.1.8');
 });
@@ -774,24 +788,8 @@ function schedule(row){
             if(now_minute + 5 > minute && now_minute - 5 < minute){
 
               var schedule = row;
-              console.log('schedule: '+now_hour+':'+now.minute+'  Notification: '+schedule.userID+' - '+schedule.message);
-              db.query('select email from users where id = ? limit 1', row.userID, function(err, rows, fields){
-                  if(err) throw err;
-                  console.log('schedule: get email form users: '+row.userID);
-                  var time = '';
-                  switch(arr_calendar.repeatType){
-                    case 0:
-                      time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút hàng ngày';break;
-                    case 1:
-                      time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút ngày '+(schedule.date == 100 ? 'cuối' : schedule.date)+' hàng tháng';break;
-                    case 2:
-                      time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút ngày '+(schedule.date == 100 ? 'cuối' : schedule.date)+' tháng '+schedule.month+' hàng năm';break
-                  };
-                  console.log('schedule: mailing... '+rows[0]['email']+' - '+schedule.message+' - '+time);
-                  mailer.noti(rows[0]['email'], schedule.message, time);
-              });
 
-              var repeatType = row.repeatType;
+              var repeatType = schedule.repeatType;
               var solarDate = new Date();
               
               if(repeatType == 0){
@@ -810,17 +808,123 @@ function schedule(row){
               }else{
                 // update lai ngay thang moi nam sau
                 var nextDateMonth = amduonglich.getNextSolarDateOfLunarDateAndMonth(parseInt(minute), parseInt(hour),parseInt(schedule.date), parseInt(schedule.month));
-                solarDate.setDate(nextDate[0]);
-                solarDate.setMonth(nextDate[1]-1);
-                solarDate.setFullYear(nextDate[2]);
+                solarDate.setDate(nextDateMonth[0]);
+                solarDate.setMonth(nextDateMonth[1]-1);
+                solarDate.setFullYear(nextDateMonth[2]);
               }
       
               var solarDateString = func.toStringDate(solarDate.getFullYear(), solarDate.getMonth()+1, solarDate.getDate(), schedule.hour, schedule.minute);
               db.query('update calendar set solarDate = "'+solarDateString+'" where id = ?', schedule.id, function(err, rows, fields){
                 if(err) throw err;
                 console.log('schedule: update calendar: '+schedule.id);
+
+                console.log('schedule: '+now_string+' '+now_hour+':'+now_minute+'  Notification: '+schedule.userID+' - '+schedule.message);
+                db.query('select email from users where id = ? limit 1', schedule.userID, function(err, rows, fields){
+                    if(err) throw err;
+                    console.log('schedule: get email form users: '+schedule.userID);
+                    var time = '';     
+                    switch(repeatType){
+                      case 0:
+                        time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút hàng ngày';break;
+                      case 1:
+                        time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút ngày '+(schedule.date == 100 ? 'cuối' : schedule.date)+' hàng tháng';break;
+                      case 2:
+                        time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút ngày '+(schedule.date == 100 ? 'cuối' : schedule.date)+' tháng '+schedule.month+' hàng năm';break
+                    };
+                    console.log('schedule: mailing... '+rows[0]['email']+' - '+schedule.message+' - '+time);
+                    
+                    var callback = function(res){
+                      if(!res){
+                        //khong gui duoc mail
+                        var repeat_hour;
+                        var repeat_minute;
+                        if(now_minute + 15 < 60){
+                          repeat_minute = now_minute + 15;
+                          repeat_hour = now_hour;
+                        }else{
+                          repeat_minute = 15 - (60 - now_minute);
+                          repeat_hour = now_hour + 1;
+                        }
+                        var arr = {
+                          calendarID : schedule.id,
+                          hour : repeat_hour,
+                          minute : repeat_minute
+                        };
+
+                        db.query('insert into mail_error set ?', arr, function(err, rows, fields){
+                          if(err) throw err;
+                          console.log('insert mail err '+ rows.insertId);
+                        });
+                      }
+                    }
+                    mailer.noti(rows[0]['email'], schedule.message, time,callback);
+                });
               });
             }
           }
         }
+}
+
+
+function mailErr(row){
+  var now = moment().zone("+07:00");
+  var now_string = moment(now).format('YYYY-MM-DD');
+  var now_hour = now.hours();
+  var now_minute = now.minutes();
+
+  var hour = row.hour;
+  var minute = row.minute;  
+
+  if(now_hour === hour){
+    if(now_minute + 5 > minute && now_minute - 5 < minute){
+
+      db.query('select * from calendar where id = ? limit 1', row.calendarID, function(err, rows, fields){
+        if(err) throw err;
+        if(rows[0]){
+          var schedule = rows[0];
+
+          console.log('mail error: '+now_string+' '+now_hour+':'+now_minute+'  Notification: '+schedule.userID+' - '+schedule.message);
+          db.query('select email from users where id = ? limit 1', schedule.userID, function(err, rows, fields){
+              if(err) throw err;
+              console.log('mail error: get email form users: '+schedule.userID);
+              var time = '';     
+              switch(schedule.repeatType){
+                case 0:
+                  time = 'Vào '+schedule.hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút hàng ngày';break;
+                          case 1:
+                  time = 'Vào '+schedule.hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút ngày '+(schedule.date == 100 ? 'cuối' : schedule.date)+' hàng tháng';break;
+                          case 2:
+                  time = 'Vào '+schedule.hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút ngày '+(schedule.date == 100 ? 'cuối' : schedule.date)+' tháng '+schedule.month+' hàng năm';break
+              };
+              console.log('mail error: repeat mailing... '+rows[0]['email']+' - '+schedule.message+' - '+time);
+              var callback = function(res){
+                if(res){
+                    db.query('delete from mail_error where id = ?', row.id, function(err, rows, fields){
+                      if(err) throw err;
+                      console.log('mail err: delete from mail_error');
+                    });
+                }else{
+                        //khong gui duoc mail
+                        var repeat_hour;
+                        var repeat_minute;
+                        if(now_minute + 15 < 60){
+                          repeat_minute = now_minute + 15;
+                          repeat_hour = now_hour;
+                        }else{
+                          repeat_minute = 15 - (60 - now_minute);
+                          repeat_hour = now_hour + 1;
+                        }
+
+                        db.query('update mail_error set hour = "'+repeat_hour+'", minute = "'+repeat_minute+'" where id = ?',row.id , function(err, rows, fields){
+                          if(err) throw err;
+                          console.log('mail err: update mail_error '+ row.id);
+                        });
+                }
+              };
+              mailer.noti(rows[0]['email'], schedule.message, time, callback);
+          });
+        }
+      });
+    }
+  }
 }
