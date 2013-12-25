@@ -764,7 +764,7 @@ http.createServer(app).listen(app.get('port'), function(){
   var now_string = moment(now).format('YYYY-MM-DD HH:mm:ss');
   console.log(now_string);
   console.log('Express server listening on port ' + app.get('port'));
-  console.log('master: version 2.1.8');
+  console.log('master: version 2.2.0');
 });
 
 
