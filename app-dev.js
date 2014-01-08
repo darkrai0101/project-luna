@@ -1258,7 +1258,6 @@ function schedule(row){
   }
 }
 
-
 function mailErr(row){
   var now = moment().zone("+07:00");
   var now_string = moment(now).format('YYYY-MM-DD');

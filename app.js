@@ -1245,7 +1245,7 @@ function schedule(row){
               }
 
               if(rows[0].facebook != null){
-                facebook.notification(rows[0].facebook, config.constant.url, schedule.message);
+                facebook.notification(rows[0].facebook, config.constant.url, schedule.message+' '+time);
               }
           });
         });
