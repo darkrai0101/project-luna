@@ -13,33 +13,33 @@ exports.fb = {
     appSecret: 'f49b30ca0c104e6e0288231324019b24'
 }
 
-exports.mysql = {
-	host : 'localhost',
-	port : '3306',
-	user : 'root',
-	password : 'mininoic',
-	database : 'luna'
-}
+// exports.mysql = {
+// 	host : 'localhost',
+// 	port : '3306',
+// 	user : 'root',
+// 	password : 'mininoic',
+// 	database : 'luna'
+// }
 
-exports.constant = {
-	url : 'http://amduonglich.mininoic.com',
-	domain : 'amduonglich.mininoic.com',
-}
+// exports.constant = {
+// 	url : 'http://amduonglich.mininoic.com',
+// 	domain : 'amduonglich.mininoic.com',
+// }
 
 // exports.fb = {
 // 	appId: '581329681915860',
 //     appSecret: '894f083dffa47c1ba025327e95ac9cf7'
 // }
 
-// exports.mysql = {
-// 	host : 'localhost',
-// 	port : '3306',
-// 	user : 'root',
-// 	password : '',
-// 	database : 'luna'
-// }
+exports.mysql = {
+	host : 'localhost',
+	port : '3306',
+	user : 'root',
+	password : '',
+	database : 'luna'
+}
 
-// exports.constant = {
-// 	url : 'http://localhost:3000',
-// 	domain : 'localhost:3000',
-// }
+exports.constant = {
+	url : 'http://localhost:3000',
+	domain : 'localhost:3000',
+}
