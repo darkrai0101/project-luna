@@ -8,10 +8,10 @@ exports.google = {
     clientSecret: 'jY-O0plAyMjWLV7hfQqZkm_m'
 }
 
-exports.fb = {
-	appId: '1384328445159118',
-    appSecret: 'f49b30ca0c104e6e0288231324019b24'
-}
+// exports.fb = {
+// 	appId: '1384328445159118',
+//     appSecret: 'f49b30ca0c104e6e0288231324019b24'
+// }
 
 exports.mysql = {
 	host : 'localhost',
@@ -26,10 +26,10 @@ exports.constant = {
 	domain : 'amduonglich.com',
 }
 
-// exports.fb = {
-// 	appId: '1424702867767076',
-//     appSecret: '4be0da3ceeeb997035caa7cd939ef64b'
-// }
+exports.fb = {
+	appId: '1424702867767076',
+    appSecret: '4be0da3ceeeb997035caa7cd939ef64b'
+}
 
 // exports.fb = {
 // 	appId: '581329681915860',
