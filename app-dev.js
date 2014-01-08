@@ -553,8 +553,11 @@ app.all('/user/auth-token/:token', function(req, res, next){
 
             console.log('user-auth-token: mailing... '+rows[0]['email']);
 
-            db.query('update users set status = 2 where id = ?', rows[0].email);
-            
+            db.query('update users set status = 2 where id = ?', userID, function(err, rows, fields){
+              if(err) throw err;
+              console.log('user-auth-token: update status = 2 where id= '+userID);
+            });
+
             mailer.thankReg(rows[0]['email']);
             //return res.send('xac thuc thanh cong');
             return res.redirect('/#/has/created')
