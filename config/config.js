@@ -9,8 +9,8 @@ exports.google = {
 }
 
 exports.fb = {
-	appId: '581329681915860',
-    appSecret: '894f083dffa47c1ba025327e95ac9cf7'
+	appId: '1384328445159118',
+    appSecret: 'f49b30ca0c104e6e0288231324019b24'
 }
 
 exports.mysql = {
@@ -25,6 +25,11 @@ exports.constant = {
 	url : 'http://amduonglich.mininoic.com',
 	domain : 'amduonglich.mininoic.com',
 }
+
+// exports.fb = {
+// 	appId: '581329681915860',
+//     appSecret: '894f083dffa47c1ba025327e95ac9cf7'
+// }
 
 // exports.mysql = {
 // 	host : 'localhost',
