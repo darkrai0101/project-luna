@@ -1,3 +1,4 @@
+var async = require('async');
 var mysql = require('mysql');
 var config = require('../config/config');
 
@@ -15,38 +16,46 @@ exports.db = db;
 exports.userLogin = userLogin;
 exports.userSchedule = userSchedule;
 
-function userLogin (name, value, type){
-    //type 1: gmail, 2: facebook
+function userLogin (name, value, email, type, callback){
+    // type -- 
+    // 1: gmail, 
+    // 2: facebook
+
     var query = 'select * from users where ';
     if(type == 1) query += 'gmail = ?';
-    else query += 'facebook = ?'
+    else query += 'facebook = ?';
+    var userID = 0;
+
     db.query( query, value, function(err, rows, fields){
         if(err) throw err;
-        var userID;
         if(rows[0]){
             var row = rows[0];
             userID = row.id;
+
+            //row.status === 0 ? callback(userID, 1) : callback(userID, 0);           
+            callback(userID, 0);
+            
         }else{
             var arr = {
                 name : name,
-                gmail : '',
-                facebook : '',
-                email : '',
-                status : 0
+                email : email,
+                status : 1
             };
 
-            if(type == 1){ 
-                arr.gmail = value;
-                arr.email = value;
-            }
-            else
-                arr.facebook = value;
-
+            switch(type){
+                case 1:
+                    arr.gmail = value;
+                    break;
+                case 2:
+                    arr.facebook = value;  
+                    break;
+            } 
+                
             db.query('insert into users set ?', arr, function(err, rows, fields){
-                userID = insertId;
+                userID = rows.insertId;
+                callback(userID, 1);
             });
         }
-        return userID;
     });
 };
 

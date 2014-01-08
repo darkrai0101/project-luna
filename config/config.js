@@ -13,28 +13,28 @@ exports.fb = {
     appSecret: '894f083dffa47c1ba025327e95ac9cf7'
 }
 
-exports.mysql = {
-	host : 'localhost',
-	port : '3306',
-	user : 'root',
-	password : 'mininoic',
-	database : 'luna'
-}
-
-exports.constant = {
-	url : 'http://amduonglich.com',
-	domain : 'amduonglich.com',
-}
-
 // exports.mysql = {
 // 	host : 'localhost',
 // 	port : '3306',
 // 	user : 'root',
-// 	password : '',
+// 	password : 'mininoic',
 // 	database : 'luna'
 // }
 
 // exports.constant = {
-// 	url : 'http://localhost:3000',
-// 	domain : 'localhost:3000',
+// 	url : 'http://amduonglich.com',
+// 	domain : 'amduonglich.com',
 // }
+
+exports.mysql = {
+	host : 'localhost',
+	port : '3306',
+	user : 'root',
+	password : '',
+	database : 'luna'
+}
+
+exports.constant = {
+	url : 'http://localhost:3000',
+	domain : 'localhost:3000',
+}
