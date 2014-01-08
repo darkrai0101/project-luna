@@ -75,7 +75,7 @@ var app = module.exports = express();
 var silent = 'test' == process.env.NODE_ENV;
 
 // all environments
-app.set('port', process.env.PORT || 3000);
+app.set('port', process.env.PORT || 3003);
 app.set('views', path.join(__dirname, '../Luna/dist'));
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
@@ -220,7 +220,7 @@ app.all('/user/quick-create', function(req, res, next){
         status    : 1
     };
 
-  db.query('select id from users where email = ? limit 1', email, function(err, rows, fields){
+  db.query('select id from users where email = ? and type = 0 limit 1', email, function(err, rows, fields){
     if(err) throw err;
 
     console.log('user-quick-create: get record from users...');
@@ -273,7 +273,8 @@ app.all('/user/quick-create', function(req, res, next){
       var arr = {
         name   : email,
         email  : email,
-        status : 0
+        status : 0,
+        type   : 0,
       };
 
       db.query('insert into users set ?', arr, function(err, rows, fields){
@@ -548,6 +549,12 @@ app.all('/user/auth-token/:token', function(req, res, next){
             console.log('user-auth-token: get email form users...');
 
             console.log('user-auth-token: mailing... '+rows[0]['email']);
+
+            db.query('update users set status = 2 where id = ?', userID, function(err, rows, fields){
+              if(err) throw err;
+              console.log('user-auth-token: update status = 2 where id= '+userID);
+            });
+
             mailer.thankReg(rows[0]['email']);
             //return res.send('xac thuc thanh cong');
             return res.redirect('/#/has/created')
@@ -795,8 +802,6 @@ app.all('/account/edit-event/:id', ensureAuthenticated, function(req, res){
     //repeat theo nam
     var schedule = amduonglich.getNextSolarDateOfLunarDateAndMonth(parseInt(option.minute), parseInt(hour), parseInt(option.date), parseInt(option.month));
     console.log(schedule);
-    console.log(hour);
-    console.log(option.minute);
     solarDate = func.toStringDate(schedule[2], schedule[1], schedule[0], hour, option.minute);
     console.log(solarDate);
   };
@@ -889,7 +894,7 @@ app.get('/account/update-email/:email', ensureAuthenticated, function(req, res){
   var userID = req.user.userID;
   var email = req.params.email;
 
-  db.query('update users set email = ? where id = ?', [email, userID], function(err, rows, fields){
+  db.query('update users set email = ?, status = 0 where id = ?', [email, userID], function(err, rows, fields){
     if(err) throw err;
 
     if(rows.affectedRows != 0){
@@ -1128,10 +1133,9 @@ http.createServer(app).listen(app.get('port'), function(){
   var now_string = moment(now).format('YYYY-MM-DD HH:mm:ss');
   console.log(now_string);
   console.log('Express server listening on port ' + app.get('port'));
-<<<<<<< HEAD
-=======
-  console.log('master: version 2.2.0');
->>>>>>> master
+
+  console.log('master: version 3.0');
+
 });
 
 
@@ -1191,45 +1195,54 @@ function schedule(row){
           console.log('schedule: update calendar: '+schedule.id);
 
           console.log('schedule: '+now_string+' '+now_hour+':'+now_minute+'  Notification: '+schedule.userID+' - '+schedule.message);
-          db.query('select email from users where id = ? limit 1', schedule.userID, function(err, rows, fields){
+          db.query('select email, type, status from users where id = ? limit 1', schedule.userID, function(err, rows, fields){
               if(err) throw err;
-              console.log('schedule: get email form users: '+schedule.userID);
-              var time = '';     
-              switch(repeatType){
-                case 0:
-                  time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút hàng ngày';break;
-                case 1:
-                  time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút ngày '+(schedule.date == 100 ? 'cuối' : schedule.date)+' hàng tháng';break;
-                case 2:
-                  time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút ngày '+(schedule.date == 100 ? 'cuối' : schedule.date)+' tháng '+schedule.month+' hàng năm';break
-              };
-              console.log('schedule: mailing... '+rows[0]['email']+' - '+schedule.message+' - '+time);
-                    
-              var callback = function(res){
-                if(!res){
-                  //khong gui duoc mail
-                  var repeat_hour;
-                  var repeat_minute;
-                  if(now_minute + 15 < 60){
-                    repeat_minute = now_minute + 15;
-                    repeat_hour = now_hour;
-                  }else{
-                    repeat_minute = 15 - (60 - now_minute);
-                    repeat_hour = now_hour + 1;
-                  }
-                  var arr = {
-                    calendarID : schedule.id,
-                    hour : repeat_hour,
-                    minute : repeat_minute
-                  };
 
-                  db.query('insert into mail_error set ?', arr, function(err, rows, fields){
-                    if(err) throw err;
-                    console.log('insert mail err '+ rows.insertId);
-                  });
+              if(rows[0].status){
+                console.log('schedule: get email form users: '+schedule.userID);
+                var time = '';     
+                switch(repeatType){
+                  case 0:
+                    time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút hàng ngày';break;
+                  case 1:
+                    time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút ngày '+(schedule.date == 100 ? 'cuối' : schedule.date)+' hàng tháng';break;
+                  case 2:
+                    time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút ngày '+(schedule.date == 100 ? 'cuối' : schedule.date)+' tháng '+schedule.month+' hàng năm';break
+                };
+                console.log('schedule: mailing... '+rows[0]['email']+' - '+schedule.message+' - '+time);
+                      
+                var callback = function(res){
+                  if(!res){
+                    //khong gui duoc mail
+                    var repeat_hour;
+                    var repeat_minute;
+                    if(now_minute + 15 < 60){
+                      repeat_minute = now_minute + 15;
+                      repeat_hour = now_hour;
+                    }else{
+                      repeat_minute = 15 - (60 - now_minute);
+                      repeat_hour = now_hour + 1;
+                    }
+                    var arr = {
+                      calendarID : schedule.id,
+                      hour : repeat_hour,
+                      minute : repeat_minute
+                    };
+
+                    db.query('insert into mail_error set ?', arr, function(err, rows, fields){
+                      if(err) throw err;
+                      console.log('insert mail err '+ rows.insertId);
+                    });
+                  }
                 }
+
+                if(rows[0].type == 2)
+                  mailer.noti(0, rows[0]['email'], schedule.message, time,callback);
+                else if(rows[0].type == 1)
+                  mailer.noti(1, rows[0]['email'], schedule.message, time,callback);
+              }else{
+                console.log('schedule: email chua xac nhan de nhan nhac nho: '+rows[0].email);
               }
-              mailer.noti(rows[0]['email'], schedule.message, time,callback);
           });
         });
       }
