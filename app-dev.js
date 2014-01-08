@@ -1249,7 +1249,7 @@ function schedule(row){
               }
 
               if(rows[0].facebook != null){
-                facebook.notification(rows[0].facebook, 'http://amduonglich.com', schedule.message);
+                facebook.notification(rows[0].facebook, 'http://amduonglich.com', schedule.message+' '+time);
               }
           });
         });
