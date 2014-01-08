@@ -224,7 +224,7 @@ app.all('/user/quick-create', function(req, res, next){
         status    : 1
     };
 
-  db.query('select id from users where email = ? and status = 2 limit 1', email, function(err, rows, fields){
+  db.query('select id from users where email = ? and type = 0 limit 1', email, function(err, rows, fields){
     if(err) throw err;
 
     console.log('user-quick-create: get record from users...');
@@ -277,7 +277,8 @@ app.all('/user/quick-create', function(req, res, next){
       var arr = {
         name   : email,
         email  : email,
-        status : 0
+        status : 0,
+        type   : 0,
       };
 
       db.query('insert into users set ?', arr, function(err, rows, fields){
@@ -1198,7 +1199,7 @@ function schedule(row){
           console.log('schedule: update calendar: '+schedule.id);
 
           console.log('schedule: '+now_string+' '+now_hour+':'+now_minute+'  Notification: '+schedule.userID+' - '+schedule.message);
-          db.query('select email, status from users where id = ? limit 1', schedule.userID, function(err, rows, fields){
+          db.query('select email, type from users where id = ? limit 1', schedule.userID, function(err, rows, fields){
               if(err) throw err;
               console.log('schedule: get email form users: '+schedule.userID);
               var time = '';     
@@ -1237,9 +1238,9 @@ function schedule(row){
                 }
               }
 
-              if(rows[0].status == 2)
+              if(rows[0].type == 2)
                 mailer.noti(0, rows[0]['email'], schedule.message, time,callback);
-              else if(rows[0].status == 1)
+              else if(rows[0].type == 1)
                 mailer.noti(1, rows[0]['email'], schedule.message, time,callback);
           });
         });

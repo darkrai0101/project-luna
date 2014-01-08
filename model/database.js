@@ -39,7 +39,8 @@ function userLogin (name, value, email, type, callback){
             var arr = {
                 name : name,
                 email : email,
-                status : 1
+                status : 1,
+                type   : 1
             };
 
             switch(type){
