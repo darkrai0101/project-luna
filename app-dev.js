@@ -799,8 +799,6 @@ app.all('/account/edit-event/:id', ensureAuthenticated, function(req, res){
     //repeat theo nam
     var schedule = amduonglich.getNextSolarDateOfLunarDateAndMonth(parseInt(option.minute), parseInt(hour), parseInt(option.date), parseInt(option.month));
     console.log(schedule);
-    console.log(hour);
-    console.log(option.minute);
     solarDate = func.toStringDate(schedule[2], schedule[1], schedule[0], hour, option.minute);
     console.log(solarDate);
   };
