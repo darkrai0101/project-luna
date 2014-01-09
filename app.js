@@ -717,7 +717,7 @@ app.get('/account/event-list', ensureAuthenticated, function(req, res){
   db.query('select * from calendar where userID = ?',userID, function(err, rows, fields){
     if(err) throw err;
     if(rows[0]){
-      return res.json(rows);
+      return res.json(func.sortEvents(rows));
     }else{
       return res.json();
     }
