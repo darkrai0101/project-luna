@@ -713,8 +713,13 @@ app.get('/account', ensureAuthenticated, function(req, res){
 app.get('/account/event-list', ensureAuthenticated, function(req, res){
   res.setHeader('Content-Type', 'text/plain');
   var userID = req.user.userID;
-  
-  db.query('select * from calendar where userID = ?',userID, function(err, rows, fields){
+  var email = 'trungpheng@gmail.com';
+  var query = 'SELECT * from calendar'
+              +' join (select id from users where email = ? and users.status != 0 or id = ?)as xx'
+              +' on xx.id = calendar.userID'
+              +' and calendar.active = 1';
+
+  db.query(query,[email, userID], function(err, rows, fields){
     if(err) throw err;
     if(rows[0]){
       return res.json(func.sortEvents(rows));
@@ -1134,7 +1139,7 @@ http.createServer(app).listen(app.get('port'), function(){
   console.log(now_string);
   console.log('Express server listening on port ' + app.get('port'));
 
-  console.log('master: version 3.0');
+  console.log('master: version 4.0');
 
 });
 
@@ -1245,7 +1250,10 @@ function schedule(row){
               }
 
               if(rows[0].facebook != null){
-                facebook.notification(rows[0].facebook, config.constant.url, schedule.message+' '+time);
+                var template = 'Thông báo: ';
+                schedule.message ?  template += schedule.message : template += 'không có nội dung';
+                template += ' '+time; 
+                facebook.notification(rows[0].facebook, config.constant.url, template);
               }
           });
         });
