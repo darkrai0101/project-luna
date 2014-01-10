@@ -1054,11 +1054,14 @@ app.get('/account/user', ensureAuthenticated, function(req, res){
       var row = rows[0];
 
       console.log(req.user.signup);
+      var hasFacebook;
+      row.facebook ? hasFacebook = 1 : hasFacebook = 0;
 
       var arr = {
         'name' : row.name,
         'email' : row.email,
-        'signup' : req.user.signup
+        'signup' : req.user.signup,
+        'hasFacebook' : hasFacebook
       }
       
       console.log(arr);
