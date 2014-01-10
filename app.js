@@ -771,7 +771,7 @@ app.get('/account/status-event/:id/:status', ensureAuthenticated, function(req, 
       var option = rows[0];
       var hour = option.hour;
       var now = new Date();
-      
+
       if(option.repeatType == 0){
       //repeat theo ngay
       var schedule_date = now.getDate();
@@ -796,7 +796,7 @@ app.get('/account/status-event/:id/:status', ensureAuthenticated, function(req, 
       solarDate = new Date(solarDate);
       console.log('status: '+solarDate);
       //check pre
-      option.pre_kind.index == 0 ? solarDate.setHours(solarDate.getHours() + parseInt(option.pre)) : solarDate.setDate(solarDate.getDate() + parseInt(option.pre));
+      option.pre_kind == 0 ? solarDate.setHours(solarDate.getHours() + parseInt(option.pre)) : solarDate.setDate(solarDate.getDate() + parseInt(option.pre));
 
       db.query('update calendar set solarDate = ? where id = ?', [solarDate, calendarID], function(err, rows, fields){
         if(err) throw err;
