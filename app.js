@@ -742,7 +742,7 @@ app.all('/account/delete-event', ensureAuthenticated, function(req, res){
   listID = listID.join(); 
   console.log(listID);
 
-  db.query('delete from calendar where id in ('+listID+') and userID = "'+userID+'"', function(err, rows, fields){
+  db.query('delete from calendar where id in ('+listID+')', function(err, rows, fields){
     if(err) throw err;
     if(rows.affectedRows != 0){
       console.log(rows);
@@ -765,7 +765,7 @@ app.get('/account/status-event/:id/:status', ensureAuthenticated, function(req, 
   var calendarID = req.params.id;
   var status = req.params.status;
 
-  db.query('update calendar set status = ? where id = ? and userID = ?', [status, calendarID, userID], function(err, rows, fields){
+  db.query('update calendar set status = ? where id = ?', [status, calendarID], function(err, rows, fields){
     if(err) throw err;
     if(rows.affectedRows != 0){
       return res.json(1);
