@@ -714,7 +714,7 @@ app.get('/account/event-list', ensureAuthenticated, function(req, res){
   res.setHeader('Content-Type', 'text/plain');
   var userID = req.user.userID;
   var email = 'trungpheng@gmail.com';
-  var query = 'SELECT * from calendar'
+  var query = 'SELECT calendar.id, calendar.message, calendar.status, calendar.hour, calendar.minute, calendar.date, calendar.month, calendar.repeatType, calendar.pre, calendar.pre_kind from calendar'
               +' join (select id from users where email = ? and users.status != 0 or id = ?)as xx'
               +' on xx.id = calendar.userID'
               +' and calendar.active = 1';
@@ -740,7 +740,7 @@ app.all('/account/delete-event', ensureAuthenticated, function(req, res){
 
   var listID = req.body;
   listID = listID.join(); 
-  console.log(listID);
+  console.log('delete-event: '+listID);
 
   db.query('delete from calendar where id in ('+listID+')', function(err, rows, fields){
     if(err) throw err;
