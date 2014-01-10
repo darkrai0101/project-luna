@@ -765,6 +765,44 @@ app.get('/account/status-event/:id/:status', ensureAuthenticated, function(req, 
   var calendarID = req.params.id;
   var status = req.params.status;
 
+  if(status == 1){
+    db.query('select * from calendar where id = ?', calendarID, function(err, rows, fields){
+      if(err) throw err;
+      var option = rows[0];
+      var hour = option.hour;
+      var now = new Date();
+      
+      if(option.repeatType == 0){
+      //repeat theo ngay
+      var schedule_date = now.getDate();
+      if(now.getHours() > hour){
+        schedule_date += 1;
+      }
+      solarDate = func.toStringDate(now.getFullYear(), now.getMonth()+1, schedule_date, hour, option.minute);
+
+      }else if(option.repeatType == 1){
+        //repeat theo thang
+        var schedule = amduonglich.getNextSolarDateOfLunarDate(parseInt(option.minute), parseInt(hour), parseInt(option.date));
+        console.log(schedule);
+        solarDate = func.toStringDate(schedule[2], schedule[1], schedule[0], hour, option.minute);
+      }else{
+        //repeat theo nam
+        var schedule = amduonglich.getNextSolarDateOfLunarDateAndMonth(parseInt(option.minute), parseInt(hour), parseInt(option.date), parseInt(option.month));
+        console.log(schedule);
+        solarDate = func.toStringDate(schedule[2], schedule[1], schedule[0], hour, option.minute);
+        console.log(solarDate);
+      };
+        
+      solarDate = new Date(solarDate);
+      console.log('status: '+solarDate);
+      //check pre
+      option.pre_kind.index == 0 ? solarDate.setHours(solarDate.getHours() + parseInt(option.pre)) : solarDate.setDate(solarDate.getDate() + parseInt(option.pre));
+
+      db.query('update calendar set solarDate = ? where id = ?', [solarDate, calendarID], function(err, rows, fields){
+        if(err) throw err;
+      })
+    });
+  };
   db.query('update calendar set status = ? where id = ?', [status, calendarID], function(err, rows, fields){
     if(err) throw err;
     if(rows.affectedRows != 0){
