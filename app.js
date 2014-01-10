@@ -1244,57 +1244,59 @@ function schedule(row){
           db.query('select facebook, email, type, status from users where id = ? limit 1', schedule.userID, function(err, rows, fields){
               if(err) throw err;
 
-              if(rows[0].status){
-                console.log('schedule: get email form users: '+schedule.userID);
-                var time = '';     
-                switch(repeatType){
-                  case 0:
-                    time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút hàng ngày';break;
-                  case 1:
-                    time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút ngày '+(schedule.date == 100 ? 'cuối' : schedule.date)+' hàng tháng';break;
-                  case 2:
-                    time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút ngày '+(schedule.date == 100 ? 'cuối' : schedule.date)+' tháng '+schedule.month+' hàng năm';break
-                };
-                console.log('schedule: mailing... '+rows[0]['email']+' - '+schedule.message+' - '+time);
-                      
-                var callback = function(res){
-                  if(!res){
-                    //khong gui duoc mail
-                    var repeat_hour;
-                    var repeat_minute;
-                    if(now_minute + 15 < 60){
-                      repeat_minute = now_minute + 15;
-                      repeat_hour = now_hour;
-                    }else{
-                      repeat_minute = 15 - (60 - now_minute);
-                      repeat_hour = now_hour + 1;
-                    }
-                    var arr = {
-                      calendarID : schedule.id,
-                      hour : repeat_hour,
-                      minute : repeat_minute
-                    };
+              if(rows[0]){
+                if(rows[0].status){
+                  console.log('schedule: get email form users: '+schedule.userID);
+                  var time = '';     
+                  switch(repeatType){
+                    case 0:
+                      time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút hàng ngày';break;
+                    case 1:
+                      time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút ngày '+(schedule.date == 100 ? 'cuối' : schedule.date)+' hàng tháng';break;
+                    case 2:
+                      time = 'Vào '+hour+' giờ '+(schedule.minute < 10 ? '0':'') + schedule.minute +' phút ngày '+(schedule.date == 100 ? 'cuối' : schedule.date)+' tháng '+schedule.month+' hàng năm';break
+                  };
+                  console.log('schedule: mailing... '+rows[0]['email']+' - '+schedule.message+' - '+time);
+                        
+                  var callback = function(res){
+                    if(!res){
+                      //khong gui duoc mail
+                      var repeat_hour;
+                      var repeat_minute;
+                      if(now_minute + 15 < 60){
+                        repeat_minute = now_minute + 15;
+                        repeat_hour = now_hour;
+                      }else{
+                        repeat_minute = 15 - (60 - now_minute);
+                        repeat_hour = now_hour + 1;
+                      }
+                      var arr = {
+                        calendarID : schedule.id,
+                        hour : repeat_hour,
+                        minute : repeat_minute
+                      };
 
-                    db.query('insert into mail_error set ?', arr, function(err, rows, fields){
-                      if(err) throw err;
-                      console.log('insert mail err '+ rows.insertId);
-                    });
+                      db.query('insert into mail_error set ?', arr, function(err, rows, fields){
+                        if(err) throw err;
+                        console.log('insert mail err '+ rows.insertId);
+                      });
+                    }
                   }
+
+                  if(rows[0].type == 2)
+                    mailer.noti(0, rows[0]['email'], schedule.message, time,callback);
+                  else if(rows[0].type == 1)
+                    mailer.noti(1, rows[0]['email'], schedule.message, time,callback);
+                }else{
+                  console.log('schedule: email chua xac nhan de nhan nhac nho: '+rows[0].email);
                 }
 
-                if(rows[0].type == 2)
-                  mailer.noti(0, rows[0]['email'], schedule.message, time,callback);
-                else if(rows[0].type == 1)
-                  mailer.noti(1, rows[0]['email'], schedule.message, time,callback);
-              }else{
-                console.log('schedule: email chua xac nhan de nhan nhac nho: '+rows[0].email);
-              }
-
-              if(rows[0].facebook != null){
-                var template = 'Thông báo: ';
-                schedule.message ?  template += schedule.message : template += 'không có nội dung';
-                template += ' '+time; 
-                facebook.notification(rows[0].facebook, config.constant.url, template);
+                if(rows[0].facebook != null){
+                  var template = 'Thông báo: ';
+                  schedule.message ?  template += schedule.message : template += 'không có nội dung';
+                  template += ' '+time; 
+                  facebook.notification(rows[0].facebook, config.constant.url, template);
+                }
               }
           });
         });
