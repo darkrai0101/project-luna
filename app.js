@@ -1289,7 +1289,7 @@ function schedule(row){
                     }
                   }
 
-                  if(rows[0].type == 2)
+                  if(rows[0].type == 0)
                     mailer.noti(0, rows[0]['email'], schedule.message, time,callback);
                   else if(rows[0].type == 1)
                     mailer.noti(1, rows[0]['email'], schedule.message, time,callback);
