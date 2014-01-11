@@ -823,7 +823,6 @@ app.all('/account/edit-event/:id', ensureAuthenticated, function(req, res){
   var userID = req.user.userID;
   var calendarID = req.params.id;
   var option = req.body;
-  console.log(option);
   var solardate;
   
   option.period === 'pm' ? hour = parseInt(option.hour) + 12 : hour = option.hour;
@@ -855,9 +854,9 @@ app.all('/account/edit-event/:id', ensureAuthenticated, function(req, res){
   //check pre
   option.pre_kind.index == 0 ? solarDate.setHours(solarDate.getHours() + parseInt(option.pre)) : solarDate.setDate(solarDate.getDate() + parseInt(option.pre));
 
-  var arr_calendar = [solarDate, option.desc,hour,option.minute,option.date,option.month,option.repeat,option.pre,option.pre_kind.index,1,1, calendarID, userID];
+  var arr_calendar = [solarDate, option.desc,hour,option.minute,option.date,option.month,option.repeat,option.pre,option.pre_kind.index,1,1, calendarID];
 
-  db.query('update calendar set solarDate = ?, message = ?, hour = ?, minute = ?, date = ?, month = ?, repeatType = ?, pre = ?, pre_kind = ?, active = ?, status = ? where id = ? and userID = ?', arr_calendar, function(err, rows, fiedls){
+  db.query('update calendar set solarDate = ?, message = ?, hour = ?, minute = ?, date = ?, month = ?, repeatType = ?, pre = ?, pre_kind = ?, active = ?, status = ? where id = ?', arr_calendar, function(err, rows, fiedls){
     if(err) throw err;
     if(rows.affectedRows != 0)
       return res.json(1);  
