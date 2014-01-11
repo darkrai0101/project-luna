@@ -713,18 +713,24 @@ app.get('/account', ensureAuthenticated, function(req, res){
 app.get('/account/event-list', ensureAuthenticated, function(req, res){
   res.setHeader('Content-Type', 'text/plain');
   var userID = req.user.userID;
-  var email = 'trungpheng@gmail.com';
-  var query = 'SELECT calendar.id, calendar.message, calendar.status, calendar.hour, calendar.minute, calendar.date, calendar.month, calendar.repeatType, calendar.pre, calendar.pre_kind from calendar'
-              +' join (select id from users where email = ? and users.status != 0 or id = ?)as xx'
-              +' on xx.id = calendar.userID'
-              +' and calendar.active = 1';
-
-  db.query(query,[email, userID], function(err, rows, fields){
+  db.query('select email from users where id = ?', userID, function(err, rows, fields){
     if(err) throw err;
     if(rows[0]){
-      return res.json(func.sortEvents(rows));
-    }else{
-      return res.json();
+      var email = rows[0].email;
+      //var email = 'trungpheng@gmail.com';
+      var query = 'SELECT calendar.id, calendar.message, calendar.status, calendar.hour, calendar.minute, calendar.date, calendar.month, calendar.repeatType, calendar.pre, calendar.pre_kind from calendar'
+                  +' join (select id from users where email = ? and users.status != 0 or id = ?)as xx'
+                  +' on xx.id = calendar.userID'
+                  +' and calendar.active = 1';
+
+      db.query(query,[email, userID], function(err, rows, fields){
+        if(err) throw err;
+        if(rows[0]){
+          return res.json(func.sortEvents(rows));
+        }else{
+          return res.json();
+        }
+      });
     }
   });
 });
