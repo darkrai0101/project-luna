@@ -823,6 +823,7 @@ app.all('/account/edit-event/:id', ensureAuthenticated, function(req, res){
   var userID = req.user.userID;
   var calendarID = req.params.id;
   var option = req.body;
+  console.log(option);
   var solardate;
   
   option.period === 'pm' ? hour = parseInt(option.hour) + 12 : hour = option.hour;
