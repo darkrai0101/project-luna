@@ -1198,6 +1198,7 @@ function ensureAuthenticated(req, res, next) {
 }
 
 function schedule(row){
+  var schedule = row;
   var now = moment().zone("+07:00");
   var now_string = moment(now).format('YYYY-MM-DD');
   var now_hour = now.hours();
@@ -1206,12 +1207,10 @@ function schedule(row){
   var date_string = date.format('YYYY-MM-DD');
 
   if(date_string === now_string){
-    var hour = date.hours();
+    var hour = schedule.hour;
     if(now_hour === hour){
-      var minute = date.minutes();
+      var minute = schedule.minute;
       if(now_minute + 5 > minute && now_minute - 5 < minute){
-
-        var schedule = row;
 
         var repeatType = schedule.repeatType;
         var solarDate = new Date();
