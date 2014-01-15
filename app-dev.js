@@ -132,31 +132,31 @@ app.use(function(err, req, res, next){
 
 // scheduling
 
-setInterval(function(){
-  db.query('select * from calendar where active = 1 and status = 1', function(err, rows, fields){
-    if(err) throw err;
-    if(rows[0]){
-      for(var p = 0; p < rows.length; p++){
-        schedule(rows[p]);
-      }
-    }else{
-      console.log('Khong co nhac nho nao...');
-    }
-  });
+// setInterval(function(){
+//   db.query('select * from calendar where active = 1 and status = 1', function(err, rows, fields){
+//     if(err) throw err;
+//     if(rows[0]){
+//       for(var p = 0; p < rows.length; p++){
+//         schedule(rows[p]);
+//       }
+//     }else{
+//       console.log('Khong co nhac nho nao...');
+//     }
+//   });
 
-  //repeat mail error
-  db.query('select * from mail_error', function(err, rows, fields){
-    if(err) throw err;
-    if(rows[0]){
-      for(var q = 0; q < rows.length; q++){
-        mailErr(rows[q]);
-      }
-    }else{
-      console.log('Khong co mail gui loi...');
-    }
-  });
-  console.log('scheduling...');
-}, 40000);
+//   //repeat mail error
+//   db.query('select * from mail_error', function(err, rows, fields){
+//     if(err) throw err;
+//     if(rows[0]){
+//       for(var q = 0; q < rows.length; q++){
+//         mailErr(rows[q]);
+//       }
+//     }else{
+//       console.log('Khong co mail gui loi...');
+//     }
+//   });
+//   console.log('scheduling...');
+// }, 40000);
 
 
  // ROUTES
