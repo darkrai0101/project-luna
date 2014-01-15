@@ -152,7 +152,7 @@ setInterval(function(){
     }
   });
   console.log('scheduling...');
-}, 4000);
+}, 40000);
 
 
  // ROUTES
