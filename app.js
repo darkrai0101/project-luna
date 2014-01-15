@@ -217,7 +217,8 @@ app.all('/user/quick-create', function(req, res, next){
         pre       : option.pre,
         pre_kind  : option.pre_kind.index,
         active    : 0,
-        status    : 1
+        status    : 1,
+        createTime : now,
     };
 
   db.query('select id from users where email = ? and type = 0 limit 1', email, function(err, rows, fields){
@@ -415,7 +416,8 @@ app.all('/user/try-create', function(req, res, next){
         pre       : option.pre,
         pre_kind  : option.pre_kind.index,
         active    : 0,
-        status    : 1
+        status    : 1,
+        createTime : now,
       };
 
       db.query('select id from users where email = ? limit 1', email, function(err, rows, fields){
@@ -923,7 +925,8 @@ app.all('/account/create-event', ensureAuthenticated, function(req, res){
         pre       : option.pre,
         pre_kind  : option.pre_kind.index,
         active    : 1,
-        status    : 1
+        status    : 1,
+        createTime: now,        
     };
 
   db.query('insert into calendar set ?', arr_calendar, function(err, rows, fiedls){
