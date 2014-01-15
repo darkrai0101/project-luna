@@ -152,7 +152,7 @@ setInterval(function(){
     }
   });
   console.log('scheduling...');
-}, 240000);
+}, 40000);
 
 
  // ROUTES
@@ -1268,18 +1268,20 @@ function schedule(row){
   var now_hour = now.hours();
   var now_minute = now.minutes();
   var date = moment(row.solarDate);
+  //var date = new Date(row.solarDate);
   var date_string = date.format('YYYY-MM-DD');
 
   if(date_string === now_string){
-    var hour = schedule.hour;
+    var hour = date.hours();
     if(now_hour === hour){
-      var minute = schedule.minute;
+      var minute = date.minutes();
       if(now_minute + 5 > minute && now_minute - 5 < minute){
 
         var repeatType = schedule.repeatType;
         var solarDate = new Date();
-        solarDate.setHours(hour);
-        solarDate.setMinutes(minute);
+        solarDate.setHours(schedule.hour);
+        solarDate.setMinutes(schedule.minute);
+        solarDate.setSeconds(0);
               
         if(repeatType == 0){
           // update lai ngay: ngay + 1
