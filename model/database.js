@@ -15,6 +15,22 @@ var db = mysql.createConnection({
 exports.db = db;
 exports.userLogin = userLogin;
 exports.userSchedule = userSchedule;
+exports.addAccount = addAccount;
+
+function addAccount(value, check , type, callback){
+    // type -- 
+    // 1: them tai khoan gmail, 
+    // 2: them tai khoan facebook
+    
+    var query = '';
+    if(type == 1) query = 'update users set gmail = ? where facebook = ?';
+    else query = 'update users set facebook = ? where gmail = ?';
+
+    db.query(query, [value, check], function(err, rows, fields){
+        if(err) throw err;
+        callback(rows.affectedRows);
+    });
+}
 
 function userLogin (name, value, email, type, callback){
     // type -- 
@@ -48,9 +64,9 @@ function userLogin (name, value, email, type, callback){
                     arr.gmail = value;
                     break;
                 case 2:
-                    arr.facebook = value;  
+                    arr.facebook = value;
                     break;
-            } 
+            }
                 
             db.query('insert into users set ?', arr, function(err, rows, fields){
                 userID = rows.insertId;
@@ -58,7 +74,7 @@ function userLogin (name, value, email, type, callback){
             });
         }
     });
-};
+}
 
 function userSchedule(id){
     //lay danh sach lich nguoi dung

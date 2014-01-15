@@ -1054,6 +1054,7 @@ app.get('/account/default-email', ensureAuthenticated, function(req, res){
 app.get('/account/user', ensureAuthenticated, function(req, res){
   res.setHeader('Content-Type', 'text/plain');
   var userID = req.user.userID;
+  console.log(req.user);
   //var email = req.user.email;
 
   db.query('select * from users where id = ?', userID, function(err, rows, fields){
@@ -1075,9 +1076,24 @@ app.get('/account/user', ensureAuthenticated, function(req, res){
       
       console.log(arr);
 
-      return res.json(arr);
+      res.json(arr);
     }
   });
+});
+
+app.get('/account/add-account',ensureAuthenticated, function(req, res){
+
+  var old_account = req.user;
+  req.session.oldAccount = old_account;
+  console.log(old_account); 
+
+  //var type = req.params.type;
+
+  // if(type == 1)
+  //   res.redirect('/auth/google');
+  // if (type == 2)
+    res.redirect('/auth/facebook');
+
 });
 
 /*
@@ -1097,11 +1113,14 @@ app.get('/auth/google',
 app.get('/auth/google/return', 
   passport.authenticate('google', { failureRedirect: '/login' }),
   function(req, res) {
+    res.setHeader('Content-Type', 'text/plain');
     var user = req.user;
+    console.log(user);
     var name = user.displayName;
     var email = user.emails[0].value;
 
-    var callback = function(userID, signup){
+    if(!req.session.oldAccount){
+      var callback = function(userID, signup){
       req.user.userID = userID;
 
       var arr = {
@@ -1115,8 +1134,23 @@ app.get('/auth/google/return',
         req.user.signup = 1;
       }else
         res.redirect('/#/event-list');
+      }
+      database.userLogin(name, email, email, 1, callback);
+    }else{
+      var callback = function(data){
+        
+        req.user = req.session.oldAccount;
+        req.session.oldAccount = null;
+
+        console.log(req.user);
+        console.log(req.session.oldAccount);
+
+        return res.send(data);
+      }
+
+      var check = req.session.oldAccount.id;
+      database.addAccount(email, check, 1, callback);
     }
-    database.userLogin(name, email, email, 1, callback);
   });
 
 app.get('/auth/facebook',
@@ -1128,13 +1162,15 @@ app.get('/auth/facebook',
 app.get('/auth/facebook/callback',
   passport.authenticate('facebook', {failureRedirect: '/login' }),
   function(req, res) {
+    res.setHeader('Content-Type', 'text/plain');
     var user = req.user;
     var username = user.username;
     var id = user.id;
     var name = user.displayName;
     var email = user.emails[0].value;
     
-    var callback = function(userID, signup){
+    if(!req.session.oldAccount){
+      var callback = function(userID, signup){
       req.user.userID = userID;
 
       var arr = {
@@ -1149,10 +1185,24 @@ app.get('/auth/facebook/callback',
         req.user.signup = 1;
       }else
         res.redirect('/#/event-list');
-    }
+      }
 
-    database.userLogin(name, id, email, 2, callback);
-    
+      database.userLogin(name, id, email, 2, callback);
+    }else{
+      var callback = function(data){
+        
+        req.user = req.session.oldAccount;
+        req.session.oldAccount = null;
+
+        console.log(req.user);
+        console.log(req.session.oldAccount);
+
+        return res.json(data);
+      }
+
+      var check = req.session.oldAccount.emails[0].value;
+      database.addAccount(id, check, 2, callback);
+    }
   });
 
 app.get('/logout', function(req, res){
