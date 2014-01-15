@@ -1267,14 +1267,16 @@ function schedule(row){
   var now_string = moment(now).format('YYYY-MM-DD');
   var now_hour = now.hours();
   var now_minute = now.minutes();
-  var date = moment(row.solarDate);
+  //var date = moment(row.solarDate);
   //var date = new Date(row.solarDate);
   var date_string = date.format('YYYY-MM-DD');
 
   if(date_string === now_string){
-    var hour = date.hours();
+    //var hour = date.hours();
+    var hour = schedule.hour;
     if(now_hour === hour){
-      var minute = date.minutes();
+      //var minute = date.minutes();
+      var minute = schedule.minute;
       if(now_minute + 5 > minute && now_minute - 5 < minute){
 
         var repeatType = schedule.repeatType;
