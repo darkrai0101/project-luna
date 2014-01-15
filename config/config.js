@@ -22,8 +22,8 @@ exports.mysql = {
 }
 
 exports.constant = {
-	url : 'http://amduonglich.com',
-	domain : 'amduonglich.com',
+	url : 'http://dev.amduonglich.com',
+	domain : 'dev.amduonglich.com',
 }
 
 // exports.fb = {
