@@ -1197,7 +1197,7 @@ app.get('/auth/facebook/callback',
         console.log(req.user);
         console.log(req.session.oldAccount);
 
-        return res.json(data);
+        res.json(data);
       }
 
       var check = req.session.oldAccount.emails[0].value;
