@@ -1267,7 +1267,7 @@ function schedule(row){
   var now_string = moment(now).format('YYYY-MM-DD');
   var now_hour = now.hours();
   var now_minute = now.minutes();
-  //var date = moment(row.solarDate);
+  var date = moment(row.solarDate);
   //var date = new Date(row.solarDate);
   var date_string = date.format('YYYY-MM-DD');
 
