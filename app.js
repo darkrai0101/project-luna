@@ -1137,19 +1137,23 @@ app.get('/auth/google/return',
       }
       database.userLogin(name, email, email, 1, callback);
     }else{
-      var callback = function(data){
+      var callback = function(err, userID){
         
-        req.user = req.session.oldAccount;
-        req.session.oldAccount = null;
+        if(err) throw err;
+
+        //req.user = req.session.oldAccount;
+        //req.session.oldAccount = null;
+        req.user.userID = userID;
 
         console.log(req.user);
         console.log(req.session.oldAccount);
 
-        return res.send(data);
+        res.json(userID);
       }
 
+      var userID = req.session.oldAccount.userID;
       var check = req.session.oldAccount.id;
-      database.addAccount(email, check, 1, callback);
+      database.addAccount(email, userID, check, 1, callback);
     }
   });
 
@@ -1189,19 +1193,24 @@ app.get('/auth/facebook/callback',
 
       database.userLogin(name, id, email, 2, callback);
     }else{
-      var callback = function(data){
+      var callback = function(err, userID){
         
-        req.user = req.session.oldAccount;
-        req.session.oldAccount = null;
+        if(err) throw err;
+
+        //req.user = req.session.oldAccount;
+        //req.session.oldAccount = null;
+        req.user.userID = userID;
 
         console.log(req.user);
         console.log(req.session.oldAccount);
 
-        res.json(data);
+        res.json(userID);
       }
 
+      var userID = req.session.oldAccount.userID;
       var check = req.session.oldAccount.emails[0].value;
-      database.addAccount(id, check, 2, callback);
+
+      database.addAccount(id, userID, check, 2, callback);
     }
   });
 
