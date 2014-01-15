@@ -24,47 +24,91 @@ function addAccount(value, userID ,check, type, callback){
     
     var oldID;
 
-    async.series([
-        function(cb){
-            var query = '';
+    var query = '';
             if(type == 1) query = 'update users set gmail = ? where id = ?';
             else query = 'update users set facebook = ? where id = ?';
 
             db.query(query, [value, userID], function(err, rows, fields){
                 if(err) throw err;
                 if(rows.affectedRows){
-                    cb();
+                    var query1 = '';
+                    if(type == 1) query1 = 'select id from users where gmail = ? limit 1';
+                    else query1 = 'select id from users where facebook = ? limit 1';
+
+                    db.query(query1, check, function(err, rows, fields){
+                        if(err) throw err;
+                        if(rows[0]){
+                            var oldID = rows[0].id;
+                            db.query('delete from users where id = ?', oldID, function(err, rows, fields){
+                                    if(err) throw err;
+                                    console.log('test oldID'+oldID);
+                                    db.query('update set userID = ? where userID = ?',[userID, oldID], function(err, rows, fields){
+                                        if(err) throw err;
+                                        if(rows.affectedRows){
+                                            console.log(rows.affectedRows);
+                                            callback(null, userID);
+                                        }else{
+                                            console.log('no calendar row update');
+                                            callback(null, 'no calendar row update');
+                                        }
+                                    });
+                            });
+                        }else{
+                            callback(null, 'no oldID select');
+                        }
+                    });
                 }else{
                     callback('error: update value', null);
                 }
             });
-        },
-        function(cb){
-            var query1 = '';
-            if(type == 1) query1 = 'select id from users where gmail = ? limit 1';
-            else query1 = 'select id from users where facebook = ? limit 1';
 
-            db.query(query1, check, function(err, rows, fields){
-                if(err) throw err;
-                if(rows[0]){
-                    var oldID = rows[0].id;
-                    cb();
-                }else{
-                    callback('error: select oldID', null);
-                }
-            });
-        },
-        function(cb){
-            db.query('update set userID = ? where userID = ?',[userID, oldID], function(err, rows, fields){
-                if(err) throw err;
-                if(rows.affectedRows){
-                    callback(null, userID);
-                }else{
-                    callback('error: update new userid', null);
-                }
-            });
-        }
-    ]);
+    // async.series([
+    //     function(cb){
+    //         var query = '';
+    //         if(type == 1) query = 'update users set gmail = ? where id = ?';
+    //         else query = 'update users set facebook = ? where id = ?';
+
+    //         db.query(query, [value, userID], function(err, rows, fields){
+    //             if(err) throw err;
+    //             if(rows.affectedRows){
+    //                 cb();
+    //             }else{
+    //                 callback('error: update value', null);
+    //             }
+    //         });
+    //     },
+    //     function(cb){
+    //         var query1 = '';
+    //         if(type == 1) query1 = 'select id from users where gmail = ? limit 1';
+    //         else query1 = 'select id from users where facebook = ? limit 1';
+
+    //         db.query(query1, check, function(err, rows, fields){
+    //             if(err) throw err;
+    //             if(rows[0]){
+    //                 var oldID = rows[0].id;
+    //                 db,query('delete from users where id = ?', oldID, function(err, rows, fields){
+    //                         if(err) throw err;
+    //                         cb();
+    //                 });
+    //             }else{
+    //                 callback(null, 'no oldID select');
+    //             }
+    //         });
+    //     },
+    //     function(cb){
+    //         console.log('test oldID'+oldID);
+    //         db.query('update set userID = ? where userID = ?',[userID, oldID], function(err, rows, fields){
+    //             if(err) throw err;
+    //             if(rows.affectedRows){
+    //                 console.log(rows.affectedRows);
+    //                 callback(null, userID);
+    //             }else{
+    //                 console.log('no calendar row update');
+    //                 callback(null, 'no calendar row update');
+    //             }
+    //         });
+    //     },
+    // ]);
 }
 
 function userLogin (name, value, email, type, callback){

@@ -152,7 +152,7 @@ setInterval(function(){
     }
   });
   console.log('scheduling...');
-}, 40000);
+}, 4000);
 
 
  // ROUTES
@@ -1081,19 +1081,18 @@ app.get('/account/user', ensureAuthenticated, function(req, res){
   });
 });
 
-app.get('/account/add-account',ensureAuthenticated, function(req, res){
+app.get('/account/add-account/:type',ensureAuthenticated, function(req, res){
 
   var old_account = req.user;
   req.session.oldAccount = old_account;
   console.log(old_account); 
 
-  //var type = req.params.type;
+  var type = req.params.type;
 
-  // if(type == 1)
-  //   res.redirect('/auth/google');
-  // if (type == 2)
+  if(type == 1)
+    res.redirect('/auth/google');
+  if (type == 2)
     res.redirect('/auth/facebook');
-
 });
 
 /*
@@ -1137,18 +1136,18 @@ app.get('/auth/google/return',
       }
       database.userLogin(name, email, email, 1, callback);
     }else{
-      var callback = function(err, userID){
+      var callback = function(err, message){
         
         if(err) throw err;
 
         //req.user = req.session.oldAccount;
-        //req.session.oldAccount = null;
-        req.user.userID = userID;
+        req.user.userID = req.session.oldAccount.userID;
+        req.session.oldAccount = null;
 
         console.log(req.user);
         console.log(req.session.oldAccount);
 
-        res.json(userID);
+        res.json(1);
       }
 
       var userID = req.session.oldAccount.userID;
@@ -1193,18 +1192,21 @@ app.get('/auth/facebook/callback',
 
       database.userLogin(name, id, email, 2, callback);
     }else{
-      var callback = function(err, userID){
+      var callback = function(err, message){
         
         if(err) throw err;
 
+        console.log(message);
+
+        //req.user = null;
         //req.user = req.session.oldAccount;
-        //req.session.oldAccount = null;
-        req.user.userID = userID;
+        req.user.userID = req.session.oldAccount.userID;;
+        req.session.oldAccount = null;
 
         console.log(req.user);
         console.log(req.session.oldAccount);
 
-        res.json(userID);
+        res.json(1);
       }
 
       var userID = req.session.oldAccount.userID;
@@ -1276,6 +1278,8 @@ function schedule(row){
 
         var repeatType = schedule.repeatType;
         var solarDate = new Date();
+        solarDate.setHours(hour);
+        solarDate.setMinutes(minute);
               
         if(repeatType == 0){
           // update lai ngay: ngay + 1
@@ -1284,15 +1288,18 @@ function schedule(row){
 
         }else if(repeatType == 1){
           // update lai ngay moi cua thang sau
-          var nextDate = amduonglich.getNextSolarDateOfLunarDate(parseInt(minute), parseInt(hour), parseInt(schedule.date));
-      
+          var nextDate = amduonglich.getNextSolarDateOfLunarDate(parseInt(minute), parseInt(hour-1), parseInt(schedule.date));
+
+          console.log('next date: '+nextDate);
           solarDate.setDate(nextDate[0]);
           solarDate.setMonth(nextDate[1]-1);
           solarDate.setFullYear(nextDate[2]);
 
         }else{
           // update lai ngay thang moi nam sau
-          var nextDateMonth = amduonglich.getNextSolarDateOfLunarDateAndMonth(parseInt(minute), parseInt(hour),parseInt(schedule.date), parseInt(schedule.month));
+          var nextDateMonth = amduonglich.getNextSolarDateOfLunarDateAndMonth(parseInt(minute), parseInt(hour-1),parseInt(schedule.date), parseInt(schedule.month));
+
+          console.log('next date: '+nextDateMonth);
           solarDate.setDate(nextDateMonth[0]);
           solarDate.setMonth(nextDateMonth[1]-1);
           solarDate.setFullYear(nextDateMonth[2]);
@@ -1301,7 +1308,7 @@ function schedule(row){
         //check pre
         schedule.pre_kind == 0 ? solarDate.setHours(solarDate.getHours() + parseInt(schedule.pre)) : solarDate.setDate(solarDate.getDate() + parseInt(schedule.pre));
 
-        console.log('schedule: '+solarDate);
+        console.log('schedule: solarDate '+solarDate);
 
         db.query('update calendar set solarDate = ? where id = ?', [solarDate, schedule.id], function(err, rows, fields){
           if(err) throw err;
