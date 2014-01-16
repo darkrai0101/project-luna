@@ -152,7 +152,7 @@ setInterval(function(){
     }
   });
   console.log('scheduling...');
-}, 40000);
+}, 240000);
 
 
  // ROUTES
@@ -1370,7 +1370,7 @@ function schedule(row){
           console.log('schedule: update calendar: '+schedule.id);
 
           console.log('schedule: '+now_string+' '+now_hour+':'+now_minute+'  Notification: '+schedule.userID+' - '+schedule.message);
-          db.query('select facebook, email, type, status from users where id = ? limit 1', schedule.userID, function(err, rows, fields){
+          db.query('select * from users where id = ? limit 1', schedule.userID, function(err, rows, fields){
               if(err) throw err;
 
               if(rows[0]){
@@ -1417,15 +1417,19 @@ function schedule(row){
                   else if(rows[0].type == 1)
                     if(rows[0].email_active)
                       mailer.noti(1, rows[0]['email'], schedule.message, time,callback);
+                    else 
+                      console.log('schedule: email da bi tat');
                 }else{
                   console.log('schedule: email chua xac nhan de nhan nhac nho: '+rows[0].email);
                 }
 
-                if(rows[0].facebook != null && rows[0].facebook_active === 1){
+                if(rows[0].facebook != null && rows[0].facebook_active == 1){
                   var template = 'Thông báo: ';
                   schedule.message ?  template += schedule.message : template += 'không có nội dung';
                   template += ' '+time; 
                   facebook.notification(rows[0].facebook, config.constant.url, template);
+                }else{
+                  console.log('schedule: facebook chua co hoac bi tat');
                 }
               }
           });
