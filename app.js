@@ -721,7 +721,7 @@ app.get('/account/event-list', ensureAuthenticated, function(req, res){
       var email = rows[0].email;
       //var email = 'trungpheng@gmail.com';
       var query = 'SELECT calendar.id, calendar.message, calendar.status, calendar.hour, calendar.minute, calendar.date, calendar.month, calendar.repeatType, calendar.pre, calendar.pre_kind from calendar'
-                  +' join (select id from users where email = ? and users.status != 0 or id = ?)as xx'
+                  +' join (select id from users where email = ? and type = 0 and users.status != 0 or id = ?)as xx'
                   +' on xx.id = calendar.userID'
                   +' and calendar.active = 1';
 
@@ -1064,14 +1064,24 @@ app.get('/account/user', ensureAuthenticated, function(req, res){
       var row = rows[0];
 
       console.log(req.user.signup);
-      var hasFacebook;
-      row.facebook ? hasFacebook = 1 : hasFacebook = 0;
+      var hasFacebook, enableEmail;
+      // 2: khong co facebook
+      // 1: co va chua bat
+      // 0: co va da bat
+      if(!row.facebook) hasFacebook = 2;
+      else
+        if(row.facebook_active) hasFacebook = 0;
+        else hasFacebook = 1;
+
+      row.email_active ? enableEmail = 1 : enableEmail = 0;
+
 
       var arr = {
         'name' : row.name,
         'email' : row.email,
         'signup' : req.user.signup,
-        'hasFacebook' : hasFacebook
+        'hasFacebook' : hasFacebook,
+        'enableEmail' : enableEmail 
       }
       
       console.log(arr);
@@ -1093,6 +1103,46 @@ app.get('/account/add-account/:type',ensureAuthenticated, function(req, res){
     res.redirect('/auth/google');
   if (type == 2)
     res.redirect('/auth/facebook');
+});
+
+app.get('/account/setting/:key/:value',ensureAuthenticated, function(req, res){
+  //key {1: email, 2:facebook, 3: whatsapp}
+  //value {1: enable, 0: disable}
+  var userID = req.user.userID;
+  var key = req.params.key;
+  var value = req.params.value;
+  switch(parseInt(key)){
+    case 1:
+      db.query('update users set email_active = ? where id = ?', [value, userID], function(err, rows, fields){
+        if(err) throw err;
+        console.log(rows.affectedRows);
+        res.json(1);
+      });
+      break;
+
+    case 2:
+        db.query('update users set facebook_active = ? where id = ?', [value, userID], function(err,rows, fields){
+          if(err) throw err;
+          console.log(rows.affectedRows);
+          res.json(1);
+        });
+      break;
+  }
+});
+
+
+app.get('/account/share-event/:action', ensureAuthenticated, function(req, res){
+  //action : {1: create, 2: refresh, 3: enable/disable}
+  // switch(req.params.action){
+  //   case 1 :
+  //     var code = 
+  //     break;
+  //   case 2 :
+  //     break;
+  //   case 3 :
+  //     break;
+  // }
+  res.json(1);
 });
 
 /*
@@ -1139,7 +1189,7 @@ app.get('/auth/google/return',
       var callback = function(err, message){
         
         if(err) throw err;
-
+        console.log(message);
         //req.user = req.session.oldAccount;
         req.user.userID = req.session.oldAccount.userID;
         req.session.oldAccount = null;
@@ -1151,7 +1201,8 @@ app.get('/auth/google/return',
       }
 
       var userID = req.session.oldAccount.userID;
-      var check = req.session.oldAccount.id;
+      var check = req.user.emails[0].value;
+
       database.addAccount(email, userID, check, 1, callback);
     }
   });
@@ -1206,11 +1257,11 @@ app.get('/auth/facebook/callback',
         console.log(req.user);
         console.log(req.session.oldAccount);
 
-        res.json(1);
+        res.redirect('/#/account');
       }
 
       var userID = req.session.oldAccount.userID;
-      var check = req.session.oldAccount.emails[0].value;
+      var check = req.user.id;
 
       database.addAccount(id, userID, check, 2, callback);
     }
@@ -1364,12 +1415,13 @@ function schedule(row){
                   if(rows[0].type == 0)
                     mailer.noti(0, rows[0]['email'], schedule.message, time,callback);
                   else if(rows[0].type == 1)
-                    mailer.noti(1, rows[0]['email'], schedule.message, time,callback);
+                    if(rows[0].email_active)
+                      mailer.noti(1, rows[0]['email'], schedule.message, time,callback);
                 }else{
                   console.log('schedule: email chua xac nhan de nhan nhac nho: '+rows[0].email);
                 }
 
-                if(rows[0].facebook != null){
+                if(rows[0].facebook != null && rows[0].facebook_active === 1){
                   var template = 'Thông báo: ';
                   schedule.message ?  template += schedule.message : template += 'không có nội dung';
                   template += ' '+time; 
@@ -1382,7 +1434,6 @@ function schedule(row){
     }
   }
 }
-
 
 function mailErr(row){
   var now = moment().zone("+07:00");
@@ -1439,7 +1490,11 @@ function mailErr(row){
                         });
                 }
               };
-              mailer.noti(rows[0]['email'], schedule.message, time, callback);
+
+              if(rows[0].type == 0)
+                    mailer.noti(0, rows[0]['email'], schedule.message, time,callback);
+              else
+                    mailer.noti(1, rows[0]['email'], schedule.message, time,callback);
           });
         }
       });
